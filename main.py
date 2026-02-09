@@ -1,11 +1,16 @@
 import requests
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv("GITHUB_TOKEN")
 
 url = "https://api.github.com/search/code?q=@context+statements+timestamp+in:file+language:json"
 
 headers = {
-  'Authorization': 'Token <insert token here>'
+  'Authorization': f'Token {TOKEN}'
 }
 
 vex_folder = "vex_files"
