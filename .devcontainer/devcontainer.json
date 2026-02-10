@@ -3,7 +3,8 @@
 {
 	"name": "Python 3",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/python:2-3.14-trixie",
+	// Info about this image specifically: https://hub.docker.com/r/microsoft/devcontainers-python
+	"image": "mcr.microsoft.com/devcontainers/python:3",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
