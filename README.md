@@ -5,10 +5,10 @@
 This repo is a replication pakcage for out thesis. In it we aim to investigate the prevalence and usage of VEX files in open source. 
 
 ## How to Use
-
+It is recomended to use the dev container for isolation and to have all the helpful tools avilable. 
 ### Useful commands
 
-Most commands can be run with make, see the make file or run `make help`:
+Most commands can be run with make, see the [make file](Makefile) or run `make help`:
 ```
 help                           Show this help
 install                        Install requirements
