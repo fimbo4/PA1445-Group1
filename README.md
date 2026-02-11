@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repo is a replication pakcage for out thesis. In it we aim to investigate the prevalence and usage of VEX files in open source. 
+This repo is a replication pakcage for our thesis. In it we aim to investigate the prevalence and usage of VEX files in open source. 
 
 ## How to Use
 It is recomended to use the dev container for isolation and to have all the helpful tools avilable. 
