@@ -15,14 +15,7 @@ Most commands can be run with make, see the make file or run `make help`:
 
 ### Prerequisites
 
-TODO: Explain which steps and dependencies are required to run and build the project (e.g., pip install -r requirements.txt)
-
-
-To use you need a GitHub Personal Access Token (PAT) which you can then place in a `.env` file with this name GITHUB_TOKEN="". An example `.env` can be found [here](example.env). As of writing only the classic PAT can access the `seach/code` needed to search for the VEX files. 
-
-### Build
-
-TODO: Explain how the whole project can be build.
+To use you need a GitHub Personal Access Token (PAT) which you can then place in a `.env` file with this name GITHUB_TOKEN="". An example `.env` can be found [here](example.env). As of writing only the classic PAT can access the `seach/code` needed to search for the VEX files. To create a PAT please follow [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic). 
 
 ### Test
 
