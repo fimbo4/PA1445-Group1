@@ -10,7 +10,8 @@ This repo is a replication pakcage for out thesis. In it we aim to investigate t
 
 Most commands can be run with make, see the make file or run `make help`:
 ```
-...
+help                           Show this help
+install                        Install requirements
 ```
 
 ### Prerequisites
@@ -25,10 +26,7 @@ TODO: Explain how unit- or integreation tests can be executed.
 
 TODO: Explain how to run the project (client, server etc.).
 
-## License
-
-TODO: Add license and copyright notice.
-
 ## Authors
 
-TODO: Add links to Authors
+Made by: 
+[Sofia Blom](https://github.com/s02blom) and [Nicholas Joseph Hughes](https://github.com/fimbo4)
