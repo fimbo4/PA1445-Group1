@@ -2,3 +2,6 @@
 vex_files/
 data.json
 html_urls.txt
+*.json
+*.ct
+*.xml
