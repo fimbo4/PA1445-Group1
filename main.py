@@ -11,7 +11,10 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
+# This should be a dictionary? So we can keep the file endings here as well
 openvex = ["@context", "openvex", "author", "@id", "statements", "timestamp"]
+cycloneDX_proto = ["package cyclonedx.v"]
+cycloneDX_json = ["bomFormat", "CycloneDX", "specVersion"]
 
 def download_file(file_urls: list, folder: str):
     file_id = 0
