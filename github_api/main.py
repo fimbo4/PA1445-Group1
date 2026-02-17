@@ -12,10 +12,6 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
-client = MongoClient("mongo", 27017)
-
-db = client.mydatabase
-
 openvex = ["@context", "openvex", "author", "@id", "statements", "timestamp"]
 cyclonedx = ["CycloneDX", "vulnerabilities", "affects", "specVersion"]
 csaf = ["/vulnerabilities" "/product_status/" "/notes"]
@@ -81,7 +77,7 @@ def get_commit_history(commit_urls: list) -> None:
 
 def try_database() -> None:
     try:
-        collection = db.get_collection(collection)
+        client = MongoClient("mongo", 27017)
         print("successful connection")
     except:
         print("failed to connect")
