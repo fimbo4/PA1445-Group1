@@ -48,25 +48,31 @@ def get_vex_spec_files(spec: list, specname: str, filetype) -> None:
     url = url + "in:file+extension:" + filetype + "&per_page=100"
 
     file_urls = []
+    commit_urls = []
 
     for i in range(1, 2):
         try:
             url_page = url + f"&page={i}"
             response = requests.request("GET", url_page, headers=headers)
-            for item in response.json()["items"]:
+            items = response.json()["items"]
+            for item in items:
+                path = item["path"]
+                owner = item["repository"]["owner"]["login"]
+                repo = item["repository"]["name"]
+                commit_urls.append(f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}")
+
+            for item in items:
                 file_urls.append(item["html_url"])
         except:
             print("GitHub API response: ")
             print(response)
-    
-    #download_file(file_urls, folder)
-    get_commit_history(file_urls)
 
-def get_commit_history(file_urls: list) -> None:
-    # for url in file_urls:
-    #     response = requests.request("GET", f"https://api.github.com/commits/{url}")
-    #     print(response)
-    pass
+    download_file(file_urls, folder)
+    get_commit_history(commit_urls)
+
+def get_commit_history(commit_urls: list) -> None:
+    for commit in commit_urls:
+        print(commit)
     
 if __name__ == "__main__":
     get_vex_spec_files(openvex, "openvex", "json")
