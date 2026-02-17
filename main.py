@@ -12,8 +12,11 @@ headers = {
 }
 
 openvex = ["@context", "openvex", "author", "@id", "statements", "timestamp"]
+cyclonedx = ["CycloneDX", "vulnerabilities", "affects", "specVersion"]
+csaf = ["/vulnerabilities" "/product_status/" "/notes"]
+spdx = []
 
-def download_file(file_urls: list, folder: str):
+def download_file(file_urls: list, folder: str) -> None:
     file_id = 0
     for url in file_urls:
         url = url.replace("https://", "https://raw.")
@@ -56,8 +59,15 @@ def get_vex_spec_files(spec: list, specname: str, filetype) -> None:
             print("GitHub API response: ")
             print(response)
     
-    download_file(file_urls, folder)
+    #download_file(file_urls, folder)
+    get_commit_history(file_urls)
+
+def get_commit_history(file_urls: list) -> None:
+    # for url in file_urls:
+    #     response = requests.request("GET", f"https://api.github.com/commits/{url}")
+    #     print(response)
+    pass
     
 if __name__ == "__main__":
     get_vex_spec_files(openvex, "openvex", "json")
-    get_vex_spec_files(openvex, "openvex", "ct")
+    #get_vex_spec_files(cyclonedx, "cyclonedx", "json")
