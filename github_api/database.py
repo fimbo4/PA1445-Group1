@@ -19,6 +19,6 @@ def retrieve_collection_data(collection: str) -> None:
 def clear_collection(collection: str) -> None:
     db.get_collection(collection).delete_many({})
 
-add_file_to_collection("openvex_json", "openvex_json/0_dockle.openvex.json")
-retrieve_collection_data("openvex_json")
-clear_collection("openvex_json")
+# add_file_to_collection("openvex_json", "openvex_json/0_dockle.openvex.json")
+# retrieve_collection_data("openvex_json")
+# clear_collection("openvex_json")

@@ -1,0 +1,30 @@
+name: vex
+
+services: 
+  mongo:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - vexnet
+
+  github_api:
+    build:
+      context: ./github_api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./github_api/.env
+    volumes:
+      - ./github_api:/app
+    networks:
+      - vexnet
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
+networks:
+  vexnet:
+    driver: bridge
