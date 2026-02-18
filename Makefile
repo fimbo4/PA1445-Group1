@@ -1,5 +1,5 @@
 install: ## Install requirements
-	pip install -r requirements.txt
+	pip install -r github_api/requirements.txt
 
 # Thanks to Andreas Bauer
 help: ## Show this help
