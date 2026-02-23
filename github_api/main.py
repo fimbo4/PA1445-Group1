@@ -12,10 +12,24 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
-openvex = ["@context", "openvex", "author", "@id", "statements", "timestamp"]
-cyclonedx = ["CycloneDX", "vulnerabilities", "affects", "specVersion"]
-csaf = ["/vulnerabilities" "/product_status/" "/notes"]
-spdx = []
+specs = {
+    "openvex": {
+        "keywords": ["@context", "openvex", "author", "@id", "statements", "timestamp"],
+        "extensions": ["json"]
+    },
+    "cyclonedx": {
+        "keywords": ["CycloneDX", "vulnerabilities", "specVersion"],
+        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
+    },
+    "csaf": {
+        "keywords": ["/vulnerabilities" "/product_status/" "/notes"],
+        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
+    },
+    "spdx": {
+        "keywords": ["vex", "vuln", "spdxId", "vexVersion"],
+        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
+    }
+}
 
 def download_file(file_urls: list, folder: str) -> None:
     file_id = 0
@@ -34,8 +48,7 @@ def download_file(file_urls: list, folder: str) -> None:
 
         file_id += 1
 
-#todo: add ability to specify date for code search
-def get_vex_spec_files(spec: list, specname: str, filetype) -> None: 
+def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None: 
 
     url = "https://api.github.com/search/code?q="
 
@@ -46,7 +59,13 @@ def get_vex_spec_files(spec: list, specname: str, filetype) -> None:
     for kword in spec:
         url = url + kword + "+"
     
-    url = url + "in:file+extension:" + filetype + "&per_page=100"
+    url = url + "in:file+extension:" + filetype + "&per_page=100&page=1"
+
+    response = requests.request("GET", url, headers=headers)
+    print(response)
+
+    with open("results.json", "w") as r:
+        json.dump(response.json(), r)
 
     file_urls = []
     commit_urls = []
@@ -68,8 +87,11 @@ def get_vex_spec_files(spec: list, specname: str, filetype) -> None:
             print("GitHub API response: ")
             print(response)
 
-    #download_file(file_urls, folder)
+    download_file(file_urls, folder)
     #get_commit_history(commit_urls)
+
+def iterate_get_vex_spec(spec: dict):
+    pass
 
 def get_commit_history(commit_urls: list) -> None:
     for commit in commit_urls:
@@ -78,11 +100,14 @@ def get_commit_history(commit_urls: list) -> None:
 def try_database() -> None:
     try:
         client = MongoClient("mongo", 27017)
+        db = client.mydatabaase
         print("successful connection")
     except:
         print("failed to connect")
 
 if __name__ == "__main__":
-    #get_vex_spec_files(openvex, "openvex", "json")
-    #get_vex_spec_files(cyclonedx, "cyclonedx", "json")
-    try_database()
+    for key in specs.keys():
+        print(f"{specs[key]} : {key}")
+    #print(f"{key} : {extension}")
+    #print(count)
+    #try_database()
