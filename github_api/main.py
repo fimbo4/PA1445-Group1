@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import json
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -19,11 +20,11 @@ specs = {
     },
     "cyclonedx": {
         "keywords": ["CycloneDX", "vulnerabilities", "specVersion"],
-        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
+        "extensions": ["json", "xml", "proto"] 
     },
     "csaf": {
-        "keywords": ["/vulnerabilities" "/product_status/" "/notes"],
-        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
+        "keywords": ["/vulnerabilities", "/product_status/", "/notes"],
+        "extensions": ["json"]
     },
     "spdx": {
         "keywords": ["vex", "vuln", "spdxId", "vexVersion"],
@@ -90,8 +91,22 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None:
     download_file(file_urls, folder)
     #get_commit_history(commit_urls)
 
-def iterate_get_vex_spec(spec: dict):
-    pass
+def iterate_get_vex_spec(specs: dict) -> dict:
+    spec_extension_and_count = {}
+    for key in specs.keys():
+        for extension in specs[key]["extensions"]:
+
+            url = "https://api.github.com/search/code?q="
+
+            for kword in specs[key]["keywords"]:
+                url = url + kword + "+"
+            
+            url = url + "in:file+extension:" + extension + "&per_page=100&page=1"
+            response = requests.request("GET", url, headers=headers).json()
+            spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
+            time.sleep(5)
+    return spec_extension_and_count
+
 
 def get_commit_history(commit_urls: list) -> None:
     for commit in commit_urls:
@@ -106,8 +121,5 @@ def try_database() -> None:
         print("failed to connect")
 
 if __name__ == "__main__":
-    for key in specs.keys():
-        print(f"{specs[key]} : {key}")
-    #print(f"{key} : {extension}")
-    #print(count)
+    print(iterate_get_vex_spec())
     #try_database()
