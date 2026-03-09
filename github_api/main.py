@@ -18,16 +18,24 @@ specs = {
         "keywords": ["@context", "openvex", "author", "@id", "statements", "timestamp"],
         "extensions": ["json"]
     },
-    "cyclonedx": {
+    "cyclonedxj": {
         "keywords": ["CycloneDX", "vulnerabilities", "specVersion"],
-        "extensions": ["json", "xml", "proto"] 
+        "extensions": ["json"]
+    },
+    "cyclonedxml": {
+        "keywords": ["vulnera", "http://cyclonedx.org/schema/bom/1.7"],
+        "extensions": ["xml"]
+    },
+    "cyclonedxp": {
+        "keywords": ["vulnerabilities", "spec_version", "cyclonedx"],
+        "extensions": ["proto"]
     },
     "csaf": {
-        "keywords": ["/vulnerabilities", "/product_status/", "/notes"],
+        "keywords": ["/vulnerabilities", "csaf_vex"],
         "extensions": ["json"]
     },
     "spdx": {
-        "keywords": ["vex", "vuln", "spdxId", "vexVersion"],
+        "keywords": ["VexVulnAssessmentRelationship"],
         "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
     }
 }
@@ -72,21 +80,21 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None:
     commit_urls = []
 
     for i in range(1, 2):
+        url_page = url + f"&page={i}"
         try:
-            url_page = url + f"&page={i}"
             response = requests.request("GET", url_page, headers=headers)
             items = response.json()["items"]
-            for item in items:
-                path = item["path"]
-                owner = item["repository"]["owner"]["login"]
-                repo = item["repository"]["name"]
-                commit_urls.append(f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}")
-
-            for item in items:
-                file_urls.append(item["html_url"])
         except:
-            print("GitHub API response: ")
-            print(response)
+            print(f"GitHub API response: {response}")
+
+        for item in items:
+            path = item["path"]
+            owner = item["repository"]["owner"]["login"]
+            repo = item["repository"]["name"]
+            commit_urls.append(f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}")
+
+        for item in items:
+            file_urls.append(item["html_url"])
 
     download_file(file_urls, folder)
     #get_commit_history(commit_urls)
@@ -102,9 +110,14 @@ def iterate_get_vex_spec(specs: dict) -> dict:
                 url = url + kword + "+"
             
             url = url + "in:file+extension:" + extension + "&per_page=100&page=1"
-            response = requests.request("GET", url, headers=headers).json()
-            spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
-            time.sleep(5)
+            try:
+                response = requests.request("GET", url, headers=headers).json()
+                spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
+            except:
+                print(f"GitHub API response: {response}")
+            
+            time.sleep(10)
+
     return spec_extension_and_count
 
 
@@ -121,5 +134,6 @@ def try_database() -> None:
         print("failed to connect")
 
 if __name__ == "__main__":
-    print(iterate_get_vex_spec())
+    #print(iterate_get_vex_spec(specs))
+    get_vex_spec_files(specs["openvex"]["keywords"], "OpenVex", "json")
     #try_database()
