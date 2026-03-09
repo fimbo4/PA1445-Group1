@@ -3,5 +3,6 @@ vex_files/
 data.json
 html_urls.txt
 *.json
+!github_api/search_terms.json
 *.ct
 *.xml

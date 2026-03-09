@@ -1,0 +1,51 @@
+{
+    "CycloneDX": 
+    {
+        "json":
+        {
+            "keywords":
+            {
+                "required": 
+                [
+                    "bomFormat",
+                    "CycloneDX",
+                    "specVersion"
+                ],
+                "optional": 
+                [
+                    "vulnerabilities"
+                ]
+            },
+            "extentions": 
+            [
+                "json"
+            ]
+        },
+        "xml":
+        {
+            "required":
+            [
+
+            ],
+            "optional":
+            [
+
+            ]
+        }
+    },
+    "OpenVEX" : 
+    {
+        "json": 
+        {
+            "keywords": 
+            [
+                "@context", 
+                "openvex", 
+                "author", 
+                "@id", 
+                "statements", 
+                "timestamp"
+            ]
+        }
+    }
+}
