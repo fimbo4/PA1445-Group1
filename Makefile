@@ -1,5 +1,8 @@
 install: ## Install requirements
-	pip install -r requirements.txt
+	pip install -r github_api/requirements.txt
+
+run: ## This will create and start the containers for both the database and the main api script
+	docker-compose up
 
 # Thanks to Andreas Bauer
 help: ## Show this help

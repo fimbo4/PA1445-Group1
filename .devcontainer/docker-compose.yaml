@@ -1,0 +1,25 @@
+services: 
+  mongo:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - vexnet
+
+  development:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace
+    stdin_open: true
+    networks:
+      - vexnet
+
+volumes:
+  mongo_data:
+networks:
+  vexnet:
+    driver: bridge
