@@ -25,11 +25,18 @@
         {
             "required":
             [
+                "bom",
+                "http://cyclonedx.org/schema/bom/",
 
             ],
             "optional":
             [
-
+                "vulnerabilities", # Details vulnerabilities
+                "vulnerability",
+                    "bomReferenceType" # For when we want to refer to a VEX outside of the SBOM
+                    "vulnerabilitiesType" # Acctual vulnerability?
+                "vulnerabilityType" # ?
+                "impactAnalysisStateType"
             ]
         }
     },
