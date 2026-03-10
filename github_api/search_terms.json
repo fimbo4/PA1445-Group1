@@ -91,5 +91,80 @@
                 "jsonld",
             ]
         }
+    },
+    "SPDX":
+    {
+        "jsonld":
+        {
+            "keywords":
+            {
+                "required":
+                [
+
+                ],
+                "optional":
+                [
+
+                ]
+            },
+            "extentions"
+            [
+
+            ]
+        },
+        "Turtle":
+        {
+            "keywords":
+            {
+                "required":
+                [
+
+                ],
+                "optional":
+                [
+
+                ]
+            },
+            "extentions"
+            [
+                
+            ]
+        },
+        "N-Triples":
+        {
+            "keywords":
+            {
+                "required":
+                [
+
+                ],
+                "optional":
+                [
+
+                ]
+            },
+            "extentions"
+            [
+                
+            ]
+        },
+        "xml":
+        {
+            "keywords":
+            {
+                "required":
+                [
+
+                ],
+                "optional":
+                [
+
+                ]
+            },
+            "extentions"
+            [
+                
+            ]
+        }
     }
 }
