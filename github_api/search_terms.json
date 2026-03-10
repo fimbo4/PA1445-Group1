@@ -74,13 +74,21 @@
         "json": 
         {
             "keywords": 
+            {
+                "required":
+                [
+                    "@context", 
+                    "https://openvex.dev/ns/v",
+                    "@id",
+                ],
+                "optional":
+                [
+                ]
+            },
+            "extentions":
             [
-                "@context", 
-                "openvex", 
-                "author", 
-                "@id", 
-                "statements", 
-                "timestamp"
+                "json",
+                "jsonld",
             ]
         }
     }
