@@ -50,11 +50,17 @@
             {
                 "required":
                 [
-                    ""
+                    "document",
+                    "category",
+                    "csaf_version",
+                    "publisher",
+                    "title",
+                    "tracking"
                 ],
                 "optional":
                 [
-
+                    "csaf_vex",
+                    "vulnerabilities",
                 ]
             },
             "extentions":
