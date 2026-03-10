@@ -23,15 +23,22 @@
         },
         "xml":
         {
-            "required":
+            "keywords":
+            {
+                "required":
+                [
+                    "bom",
+                    "http://cyclonedx.org/schema/bom/",
+    
+                ],
+                "optional":
+                [
+                    "vulnerabilities",
+                ]
+            },
+            "extentions":
             [
-                "bom",
-                "http://cyclonedx.org/schema/bom/",
-
-            ],
-            "optional":
-            [
-                "vulnerabilities",
+                "xml"
             ]
         }
     },
