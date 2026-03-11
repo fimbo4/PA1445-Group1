@@ -13,39 +13,12 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
-specs = {
-    "openvex": {
-        "keywords": ["@context", "openvex", "author", "@id", "statements", "timestamp"],
-        "extensions": ["json"]
-    },
-    "cyclonedxj": {
-        "keywords": ["CycloneDX", "vulnerabilities", "specVersion"],
-        "extensions": ["json"]
-    },
-    "cyclonedxml": {
-        "keywords": ["vulnera", "http://cyclonedx.org/schema/bom/1.7"],
-        "extensions": ["xml"]
-    },
-    "cyclonedxp": {
-        "keywords": ["vulnerabilities", "spec_version", "cyclonedx"],
-        "extensions": ["proto"]
-    },
-    "csaf": {
-        "keywords": ["/vulnerabilities", "csaf_vex"],
-        "extensions": ["json"]
-    },
-    "spdx": {
-        "keywords": ["VexVulnAssessmentRelationship"],
-        "extensions": ["nt", "ttl", "json", "rdf", "jsonld"]
-    }
-}
-
 def download_file(file_urls: list, folder: str, response_total) -> None:
     
-    with open(f"{folder}/0_results_total.json", "w") as r:
-        json.dump(response_total.json(), r)
+    # with open(f"{folder}/0_results_total.json", "w") as r:
+    #     json.dump(response_total.json(), r)
 
-    file_id = 1
+    file_id = 0
 
     for url in file_urls:
         url = url.replace("https://", "https://raw.")
@@ -56,13 +29,14 @@ def download_file(file_urls: list, folder: str, response_total) -> None:
         filepath = f"{folder}/{filename}"
 
         response = requests.request("GET", url, headers=headers)
-
-        with open(filepath, "w") as fp:
-            fp.write(response.content.decode("utf-8"))
-
+        try: #still creates the file but content is empty
+            with open(filepath, "w") as fp: 
+                fp.write(response.content.decode("utf-8"))
+        except:
+            print(f"Decoding error for: {filename}")
         file_id += 1
 
-def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None: 
+def get_vex_spec_files(spec: list, specname: str, filetype: str, extension: str) -> None: 
 
     url = "https://api.github.com/search/code?q="
 
@@ -73,15 +47,14 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None:
     for kword in spec:
         url = url + kword + "+"
     
-    url = url + "in:file+extension:" + filetype + "&per_page=100&page=1"
+    url = url + "in:file+extension:" + extension + "&per_page=100"
 
-    response_total = requests.request("GET", url, headers=headers)
-    # print(response_total)
+    response_total = requests.request("GET", url, headers=headers) #metadata about vex spec searches
 
     file_urls = []
     commit_urls = []
 
-    for i in range(1, 2):
+    for i in range(1, 2): #how many pages you want to search
         url_page = url + f"&page={i}"
         try:
             response = requests.request("GET", url_page, headers=headers)
@@ -98,7 +71,7 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str) -> None:
         for item in items:
             file_urls.append(item["html_url"])
 
-    #download_file(file_urls, folder, response_total)
+    download_file(file_urls, folder, response_total)
     #get_commit_history(commit_urls)
 
 def iterate_get_vex_spec(specs: dict) -> dict:
@@ -146,26 +119,20 @@ def get_all_search_terms() -> list:
         return search_terms.keys()
     
 def parse_search_term(spec_name: str, search_term: dict, include_optional=False) -> None:
-    # need specname: str, keywords: list, filetype: str
     for filetype in search_term.keys():
-            extensions = search_term[filetype]['extentions']
-            keywords = search_term[filetype]['keywords']['required']
-            if include_optional:
-                keywords += search_term[filetype]['keywords']['optional']
-            print(
-f"""{spec_name}: \n
-    Filetype: {filetype}\n     
-    Required: {search_term[filetype]['keywords']['required']}\n
-    Optional: {search_term[filetype]['keywords']['optional']}\n
-    Extensions: {search_term[filetype]['extentions']}
-""")
-            for extension in extensions:
-                print(extension, keywords, spec_name)
+        extensions = search_term[filetype]['extentions']
+        keywords = search_term[filetype]['keywords']['required']
+        if include_optional:
+            keywords += search_term[filetype]['keywords']['optional']
+
+        for extension in extensions:
+            get_vex_spec_files(keywords, spec_name, filetype, extension)
+
 
 def iterate_all_search_terms() -> None:
     keys = get_all_search_terms()
     for key in keys:
-        parse_search_term(key, get_search_term(key), False)
+        parse_search_term(key, get_search_term(key), True)
 
 if __name__ == "__main__":
     #print(iterate_get_vex_spec(specs))
