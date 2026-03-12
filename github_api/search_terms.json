@@ -28,12 +28,12 @@
                 "required":
                 [
                     "bom",
-                    "http://cyclonedx.org/schema/bom/",
+                    "http://cyclonedx.org/schema/bom/"
     
                 ],
                 "optional":
                 [
-                    "vulnerabilities",
+                    "vulnerabilities"
                 ]
             },
             "extentions":
@@ -60,7 +60,7 @@
                 "optional":
                 [
                     "csaf_vex",
-                    "vulnerabilities",
+                    "vulnerabilities"
                 ]
             },
             "extentions":
@@ -79,7 +79,7 @@
                 [
                     "@context", 
                     "https://openvex.dev/ns/v",
-                    "@id",
+                    "@id"
                 ],
                 "optional":
                 [
@@ -88,7 +88,7 @@
             "extentions":
             [
                 "json",
-                "jsonld",
+                "jsonld"
             ]
         }
     },
@@ -107,7 +107,7 @@
 
                 ]
             },
-            "extentions"
+            "extentions":
             [
 
             ]
@@ -125,7 +125,7 @@
 
                 ]
             },
-            "extentions"
+            "extentions":
             [
                 
             ]
@@ -143,7 +143,7 @@
 
                 ]
             },
-            "extentions"
+            "extentions":
             [
                 
             ]
@@ -161,7 +161,7 @@
 
                 ]
             },
-            "extentions"
+            "extentions":
             [
                 
             ]

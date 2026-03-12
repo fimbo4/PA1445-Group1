@@ -13,10 +13,11 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
+INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
+
+vex_filetype_count = []
+
 def download_file(file_urls: list, folder: str, response_total) -> None:
-    
-    # with open(f"{folder}/0_results_total.json", "w") as r:
-    #     json.dump(response_total.json(), r)
 
     file_id = 0
 
@@ -31,25 +32,33 @@ def download_file(file_urls: list, folder: str, response_total) -> None:
         response = requests.request("GET", url, headers=headers)
         try: #still creates the file but content is empty
             with open(filepath, "w") as fp: 
-                fp.write(response.content.decode("utf-8"))
+                fp.write(response.content.decode("utf-8"))  
         except:
             print(f"Decoding error for: {filename}")
+            os.remove(filepath)
+
         file_id += 1
 
-def get_vex_spec_files(spec: list, specname: str, filetype: str, extension: str) -> None: 
+def get_github_vex_files(spec: list, specname: str, filetype: str, extension: str, download: bool, get_history: bool) -> None: 
 
     url = "https://api.github.com/search/code?q="
 
-    folder = f"{specname}_{filetype}"
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    if download:
+        folder = f"{specname}_{filetype}"
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
     for kword in spec:
-        url = url + kword + "+"
+        url = f"{url}{kword}+"
     
-    url = url + "in:file+extension:" + extension + "&per_page=100"
+    url = f"{url}in:file+extension:{extension}&per_page=100"
 
     response_total = requests.request("GET", url, headers=headers) #metadata about vex spec searches
+    
+    try:
+        vex_filetype_count.append({f"{specname}-ft:{filetype}-ext:{extension}": response_total.json()["total_count"]})
+    except:
+        print("Failed to get total count")
 
     file_urls = []
     commit_urls = []
@@ -61,6 +70,7 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str, extension: str)
             items = response.json()["items"]
         except:
             print(f"GitHub API response: {response}")
+            break
 
         for item in items:
             path = item["path"]
@@ -71,8 +81,10 @@ def get_vex_spec_files(spec: list, specname: str, filetype: str, extension: str)
         for item in items:
             file_urls.append(item["html_url"])
 
-    download_file(file_urls, folder, response_total)
-    #get_commit_history(commit_urls)
+    if download:
+        download_file(file_urls, folder, response_total)
+    if get_history:
+        get_commit_history(commit_urls)
 
 def iterate_get_vex_spec(specs: dict) -> dict:
     spec_extension_and_count = {}
@@ -109,16 +121,17 @@ def try_database() -> None:
         print("failed to connect")
 
 def get_search_term(spec: str) -> dict:
-    with open("github_api/search_terms.json", "r") as st:
+    with open("search_terms.json", "r") as st:
         search_terms = json.loads(st.read())
         return search_terms[spec]
     
 def get_all_search_terms() -> list:
-    with open("github_api/search_terms.json", "r") as st:
+    with open("search_terms.json", "r") as st:
         search_terms = json.loads(st.read())
         return search_terms.keys()
     
-def parse_search_term(spec_name: str, search_term: dict, include_optional=False) -> None:
+def parse_search_term(spec_name: str, search_term: dict, get_history: bool, download: bool, include_optional=True) -> None:
+
     for filetype in search_term.keys():
         extensions = search_term[filetype]['extentions']
         keywords = search_term[filetype]['keywords']['required']
@@ -126,18 +139,17 @@ def parse_search_term(spec_name: str, search_term: dict, include_optional=False)
             keywords += search_term[filetype]['keywords']['optional']
 
         for extension in extensions:
-            get_vex_spec_files(keywords, spec_name, filetype, extension)
+            get_github_vex_files(keywords, spec_name, filetype, extension, download, get_history)
 
-
-def iterate_all_search_terms() -> None:
+def iterate_all_search_terms(download: bool, get_history: bool) -> None:
     keys = get_all_search_terms()
     for key in keys:
-        parse_search_term(key, get_search_term(key), True)
+       parse_search_term(key, get_search_term(key), get_history, download, True)
 
 if __name__ == "__main__":
     #print(iterate_get_vex_spec(specs))
-    #get_vex_spec_files(specs["csaf"]["keywords"], "csaf", "json")
+    #get_github_vex_files (specs["csaf"]["keywords"], "csaf", "json")
     #try_database()
     #parse_search_term("CycloneDX", get_search_term("CycloneDX"), True)
-    iterate_all_search_terms()
+    iterate_all_search_terms(False, False)
     #print(get_search_term("CycloneDX"))
