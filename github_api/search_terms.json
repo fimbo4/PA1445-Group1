@@ -100,16 +100,20 @@
             {
                 "required":
                 [
+                    "@context",
+                    "https://spdx.org/rdf/3.",
+                    "@graph",
 
                 ],
                 "optional":
                 [
-
+                    "Vulnerability",
                 ]
             },
             "extentions":
             [
-
+                "json",
+                "jsonld"
             ]
         },
         "Turtle":
