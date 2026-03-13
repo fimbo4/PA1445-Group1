@@ -122,16 +122,17 @@
             {
                 "required":
                 [
-
+                    "@base",
+                    "https://spdx.org/rdf/3.",
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "ttl"
             ]
         },
         "N-Triples":
@@ -140,16 +141,16 @@
             {
                 "required":
                 [
-
+                    "https://spdx.org/rdf/3."
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "nt",
             ]
         },
         "xml":
@@ -158,16 +159,16 @@
             {
                 "required":
                 [
-
+                    "https://spdx.org/rdf/3."
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "xml"
             ]
         }
     }
