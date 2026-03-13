@@ -100,16 +100,20 @@
             {
                 "required":
                 [
+                    "@context",
+                    "https://spdx.org/rdf/3.",
+                    "@graph",
 
                 ],
                 "optional":
                 [
-
+                    "Vulnerability",
                 ]
             },
             "extentions":
             [
-
+                "json",
+                "jsonld"
             ]
         },
         "Turtle":
@@ -118,16 +122,17 @@
             {
                 "required":
                 [
-
+                    "@base",
+                    "https://spdx.org/rdf/3.",
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "ttl"
             ]
         },
         "N-Triples":
@@ -136,16 +141,16 @@
             {
                 "required":
                 [
-
+                    "https://spdx.org/rdf/3."
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "nt",
             ]
         },
         "xml":
@@ -154,16 +159,16 @@
             {
                 "required":
                 [
-
+                    "https://spdx.org/rdf/3."
                 ],
                 "optional":
                 [
-
+                    "Vulnerability"
                 ]
             },
             "extentions":
             [
-                
+                "xml"
             ]
         }
     }
