@@ -46,7 +46,7 @@ def add_files_to_db(file_urls: list, folder: str) -> None:
 
     file_id = 0
 
-    
+    db.create_collection(folder)
 
     for url in file_urls:
         url = url.replace("https://", "https://raw.")
@@ -55,12 +55,13 @@ def add_files_to_db(file_urls: list, folder: str) -> None:
         filename = url.split("/")[-1]
         filename = str(file_id) + "_" + filename
 
-        response = requests.request("GET", url, headers=headers)
+        response = retry_request(url)
         try:
             content = response.content.decode("utf-8")
+            content = {filename: content}
             db.add_file_to_collection(folder, content)
-        except:
-            print(f"Decoding error for: {filename}")
+        except Exception as error:
+            print(f"Error")
 
         file_id += 1
 
