@@ -1,55 +1,39 @@
 {
-    "CycloneDX": 
-    {
-        "json":
-        {
-            "keywords":
-            {
-                "required": 
-                [
+    "CycloneDX": {
+        "json": {
+            "keywords": {
+                "required": [
                     "bomFormat",
                     "CycloneDX",
                     "specVersion"
                 ],
-                "optional": 
-                [
+                "optional": [
                     "vulnerabilities"
                 ]
             },
-            "extentions": 
-            [
+            "extentions": [
                 "json"
             ]
         },
-        "xml":
-        {
-            "keywords":
-            {
-                "required":
-                [
+        "xml": {
+            "keywords": {
+                "required": [
                     "bom",
                     "http://cyclonedx.org/schema/bom/"
-    
                 ],
-                "optional":
-                [
+                "optional": [
                     "vulnerabilities"
                 ]
             },
-            "extentions":
-            [
+            "extentions": [
                 "xml"
             ]
         }
     },
-    "CSAF":
-    {
-        "json":
-        {
-            "keywords":
-            {
-                "required":
-                [
+    "CSAF": {
+        "json": {
+            "keywords": {
+                "required": [
                     "document",
                     "category",
                     "csaf_version",
@@ -57,117 +41,86 @@
                     "title",
                     "tracking"
                 ],
-                "optional":
-                [
+                "optional": [
                     "csaf_vex",
                     "vulnerabilities"
                 ]
             },
-            "extentions":
-            [
+            "extentions": [
                 "json"
             ]
         }
     },
-    "OpenVEX" : 
-    {
-        "json": 
-        {
-            "keywords": 
-            {
-                "required":
-                [
-                    "@context", 
+    "OpenVEX": {
+        "json": {
+            "keywords": {
+                "required": [
+                    "@context",
                     "https://openvex.dev/ns/v",
                     "@id"
                 ],
-                "optional":
-                [
-                ]
+                "optional": []
             },
-            "extentions":
-            [
+            "extentions": [
                 "json",
                 "jsonld"
             ]
         }
     },
-    "SPDX":
-    {
-        "jsonld":
-        {
-            "keywords":
-            {
-                "required":
-                [
+    "SPDX": {
+        "jsonld": {
+            "keywords": {
+                "required": [
                     "@context",
                     "https://spdx.org/rdf/3.",
-                    "@graph",
-
+                    "@graph"
                 ],
-                "optional":
-                [
-                    "Vulnerability",
+                "optional": [
+                    "Vulnerability"
                 ]
             },
-            "extentions":
-            [
+            "extentions": [
                 "json",
                 "jsonld"
             ]
         },
-        "Turtle":
-        {
-            "keywords":
-            {
-                "required":
-                [
+        "Turtle": {
+            "keywords": {
+                "required": [
                     "@base",
-                    "https://spdx.org/rdf/3.",
+                    "https://spdx.org/rdf/3."
                 ],
-                "optional":
-                [
+                "optional": [
                     "Vulnerability"
                 ]
             },
-            "extentions":
-            [
+            "extentions": [
                 "ttl"
             ]
         },
-        "N-Triples":
-        {
-            "keywords":
-            {
-                "required":
-                [
+        "N-Triples": {
+            "keywords": {
+                "required": [
                     "https://spdx.org/rdf/3."
                 ],
-                "optional":
-                [
+                "optional": [
                     "Vulnerability"
                 ]
             },
-            "extentions":
-            [
-                "nt",
+            "extentions": [
+                "nt"
             ]
         },
-        "xml":
-        {
-            "keywords":
-            {
-                "required":
-                [
+        "xml": {
+            "keywords": {
+                "required": [
                     "https://spdx.org/rdf/3."
                 ],
-                "optional":
-                [
+                "optional": [
                     "Vulnerability"
                 ]
             },
-            "extentions":
-            [
+            "extentions": [
                 "xml"
             ]
         }
