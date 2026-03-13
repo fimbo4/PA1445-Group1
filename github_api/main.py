@@ -78,8 +78,7 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
         url = f"{url}{kword}+"
     
     url = f"{url}in:file+extension:{extension}&per_page=100"
-
-    response_total = requests.request("GET", url, headers=headers) #metadata about vex spec searches
+    response_total = retry_request(url)
     
     try:
         vex_filetype_count.append({f"{specname}-ft:{filetype}-ext:{extension}": response_total.json()["total_count"]})
@@ -89,11 +88,11 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
     file_urls = []
     commit_urls = []
 
-    for i in range(1, 2): #how many pages you want to search
+    for i in range(1, 2): #how many pages you want to search'
         url_page = url + f"&page={i}"
-        try:
-            response = requests.request("GET", url_page, headers=headers)
-            items = response.json()["items"]
+        
+        items = retry_request(url_page)
+        items = items.json()["items"]
         except:
             print(f"GitHub API response: {response}")
             break
@@ -125,13 +124,15 @@ def iterate_get_vex_spec(specs: dict) -> dict:
                 url = url + kword + "&"
             
             url = url + "in:file+extension:" + extension + "&per_page=100&page=1"
-            try:
-                response = requests.request("GET", url, headers=headers).json()
-                spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
-            except:
-                print(f"GitHub API response: {response}")
+
+            # try:
+            #     response = requests.request("GET", url, headers=headers).json()
+            #     spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
+            # except:
+            #     print(f"GitHub API response: {response}")
             
-            time.sleep(10)
+            response = retry_request(url)["total_count"]
+            spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
 
     return spec_extension_and_count
 
