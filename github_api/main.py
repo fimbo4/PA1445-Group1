@@ -66,14 +66,15 @@ def add_files_to_db(file_urls: list, folder: str) -> None:
 def retry_request(req: str) -> requests.Response: 
     successful = False
     while(not successful):
-        print("we're loopin")
         try:
             response = requests.request("GET", req, headers=headers)
+            response.raise_for_status()
             successful = True
-        except response.json()["status_code"] == 403:
+        except requests.exceptions.RequestException:
+            print(f"{req} gave status code {response.status_code}: sleeping for 1m then retrying")
             time.sleep(60)
-        except:
-            print("Something went really wrong!")
+        except Exception as e:
+            print(f"Error when making request for: {req}: {e}")
     return response
 
 def get_github_vex_files(spec: list, specname: str, filetype: str, extension: str, download: bool, get_history: bool, add_to_db: bool) -> list: 
