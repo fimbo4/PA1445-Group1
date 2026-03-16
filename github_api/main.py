@@ -105,7 +105,11 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
         url_page = url + f"&page={i}"
         
         items = retry_request(url_page)
-        items = items.json()["items"]
+        try:
+            items = items.json()["items"]
+        except:
+            print("Request did not have attribute 'items': skipping")
+            break
 
         for item in items:
             path = item["path"]
