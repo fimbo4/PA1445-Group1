@@ -14,6 +14,7 @@ headers = {
   'Authorization': f'Token {TOKEN}'
 }
 
+PAGE_LIMIT = 100
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
 db = vexDB()
@@ -174,10 +175,33 @@ def iterate_all_search_terms(download: bool, get_history: bool, add_to_db: bool,
        vex_filetype_count += parse_search_term(key, get_search_terms(key), download, get_history, add_to_db, include_optional)
     return vex_filetype_count
 
+def initial_search(search_terms: dict) -> int:
+    search_results = {}
+    
+    base_url = "https://api.github.com/search/code?q="
+    url = base_url
+
+    for specification, content in search_terms.items():
+        search_results[specification] = []
+        for _, type in content.items():
+            url = base_url
+            for keyword in type["keywords"]["required"]:
+                url = f"{url}{keyword}+"
+            if INCLUDE_OPTIONAL[specification]:
+                for keyword in type["keywords"]["optional"]:
+                    url = f"{url}{keyword}+"
+            for extention in type["extentions"]:
+                search_results[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page=100"})
+
+    print(search_results)
+            
+
 def main() -> None:
     pass
 
     search_terms = get_search_terms()
+    initial_search(search_terms)
+    # total_files = 
 
 
 if __name__ == "__main__": 
