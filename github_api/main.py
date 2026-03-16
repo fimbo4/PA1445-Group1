@@ -166,12 +166,14 @@ def try_database() -> None:
         print("failed to connect")
 
 def get_search_term(spec: str) -> dict:
-    with open("github_api/search_terms.json", "r") as st:
+    search_terms = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
+    with open(search_terms, "r") as st:
         search_terms = json.loads(st.read())
         return search_terms[spec]
     
 def get_all_search_terms() -> list:
-    with open("github_api/search_terms.json", "r") as st:
+    search_terms = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
+    with open(search_terms, "r") as st:
         search_terms = json.loads(st.read())
         return search_terms.keys()
     
