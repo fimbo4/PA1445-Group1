@@ -175,14 +175,14 @@ def iterate_all_search_terms(download: bool, get_history: bool, add_to_db: bool,
        vex_filetype_count += parse_search_term(key, get_search_terms(key), download, get_history, add_to_db, include_optional)
     return vex_filetype_count
 
-def initial_search(search_terms: dict) -> int:
-    search_results = {}
-    
+
+def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
+    search_urls = {}
     base_url = "https://api.github.com/search/code?q="
     url = base_url
 
     for specification, content in search_terms.items():
-        search_results[specification] = []
+        search_urls[specification] = []
         for _, type in content.items():
             url = base_url
             for keyword in type["keywords"]["required"]:
@@ -191,9 +191,8 @@ def initial_search(search_terms: dict) -> int:
                 for keyword in type["keywords"]["optional"]:
                     url = f"{url}{keyword}+"
             for extention in type["extentions"]:
-                search_results[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page=100"})
-
-    print(search_results)
+                search_urls[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page=100"})
+    return search_urls
             
 
 def main() -> None:
