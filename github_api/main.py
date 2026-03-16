@@ -141,11 +141,13 @@ def try_database() -> None:
     except:
         print("failed to connect")
 
-def get_search_term(spec: str) -> dict:
-    search_terms = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
-    with open(search_terms, "r") as st:
+def get_search_terms() -> dict:
+    search_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
+    search_terms = {}
+
+    with open(search_file, "r") as st:
         search_terms = json.loads(st.read())
-        return search_terms[spec]
+    return search_terms
     
 def get_all_search_terms() -> list:
     search_terms = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
@@ -169,8 +171,15 @@ def iterate_all_search_terms(download: bool, get_history: bool, add_to_db: bool,
     vex_filetype_count = []
     keys = get_all_search_terms()
     for key in keys:
-       vex_filetype_count += parse_search_term(key, get_search_term(key), download, get_history, add_to_db, include_optional)
+       vex_filetype_count += parse_search_term(key, get_search_terms(key), download, get_history, add_to_db, include_optional)
     return vex_filetype_count
 
+def main() -> None:
+    pass
+
+    search_terms = get_search_terms()
+
+
 if __name__ == "__main__": 
-    print(iterate_all_search_terms(download=False, get_history=False, add_to_db=True, include_optional=True))
+    main()
+    # print(iterate_all_search_terms(download=False, get_history=False, add_to_db=True, include_optional=True))
