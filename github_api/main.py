@@ -193,14 +193,26 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
             for extention in type["extentions"]:
                 search_urls[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page=100"})
     return search_urls
+        
             
+def initial_search(search_terms: dict) -> tuple[dict[list], int]:
+    search_results = construct_search_code_urls(search_terms)
+    count = 0
+    for specification, content in search_results.items():
+        for url in content:
+            request = retry_request(url["search_url"])
+            url["request"] = request
+            count += request.json()["total_count"]
+    
+    return search_results, count
+    
 
 def main() -> None:
     pass
 
     search_terms = get_search_terms()
-    initial_search(search_terms)
-    # total_files = 
+    pages, total_count = initial_search(search_terms)
+    
 
 
 if __name__ == "__main__": 
