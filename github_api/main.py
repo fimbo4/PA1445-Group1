@@ -129,30 +129,6 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
 
     return vex_filetype_count
 
-def iterate_get_vex_spec(specs: dict) -> dict:
-    spec_extension_and_count = {}
-    for key in specs.keys():
-        for extension in specs[key]["extensions"]:
-
-            url = "https://api.github.com/search/code?q="
-
-            for kword in specs[key]["keywords"]:
-                url = url + kword + "&"
-            
-            url = url + "in:file+extension:" + extension + "&per_page=100&page=1"
-
-            # try:
-            #     response = requests.request("GET", url, headers=headers).json()
-            #     spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
-            # except:
-            #     print(f"GitHub API response: {response}")
-            
-            response = retry_request(url)["total_count"]
-            spec_extension_and_count[f"{key}_{extension}"] = response["total_count"]
-
-    return spec_extension_and_count
-
-
 def get_commit_history(commit_urls: list) -> None:
     for commit in commit_urls:
         print(commit)
