@@ -1,7 +1,7 @@
 .env
 vex_files/
-data.json
-html_urls.txt
+github_api/__pycache__
+
 *.json
 !github_api/search_terms.json
 *.ct
