@@ -191,7 +191,7 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
                 for keyword in type["keywords"]["optional"]:
                     url = f"{url}{keyword}+"
             for extention in type["extentions"]:
-                search_urls[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page=100"})
+                search_urls[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page={PAGE_LIMIT}"})
     return search_urls
         
             
