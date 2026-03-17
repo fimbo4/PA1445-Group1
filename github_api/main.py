@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import time
 from database import vexDB
+import tqdm
+from typing import Generator
 
 load_dotenv()
 
@@ -219,6 +221,17 @@ def file_generator(pages) -> Generator[dict]:
 def main() -> None:
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
+    
+    for vex_file in tqdm.tqdm(iterable=file_generator(pages=pages), total=total_count, desc="description of what i'm doing", unit="file"):
+        pass
+        # if download:
+        #     download_file(file_urls, folder, response_total)
+        # if get_history:
+        #     get_commit_history(commit_urls)
+        # if add_to_db:
+        #     add_files_to_db(file_urls, f"{specname}_{filetype}")
+        
+    # Generators!
     
 
 
