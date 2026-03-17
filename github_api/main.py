@@ -70,72 +70,12 @@ def retry_request(req: str) -> requests.Response:
             print(f"Error when making request for: {req}: {e}")
     return response
 
-def get_github_vex_files(spec: list, specname: str, filetype: str, extension: str, download: bool, get_history: bool, add_to_db: bool) -> list: 
-    vex_filetype_count = []
-
-    url = "https://api.github.com/search/code?q="
-
-    if download:
-        folder = f"{specname}_{filetype}"
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-    for kword in spec:
-        url = f"{url}{kword}+"
-    
-    url = f"{url}in:file+extension:{extension}&per_page=100"
-    response_total = retry_request(url)
-    
-    try:
-        vex_filetype_count.append({f"{specname}-ft:{filetype}-ext:{extension}": response_total.json()["total_count"]})
-    except:
-        print("Failed to get total count")
-
-    file_urls = []
-    commit_urls = []
-
-    for i in range(1, 2): #how many pages you want to search'
-        url_page = url + f"&page={i}"
-        
-        items = retry_request(url_page)
-        try:
-            items = items.json()["items"]
-        except:
-            print("Request did not have attribute 'items': skipping")
-            break
-
-        for item in items:
-            path = item["path"]
-            owner = item["repository"]["owner"]["login"]
-            repo = item["repository"]["name"]
-            commit_urls.append(f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}")
-
-        for item in items:
-            file_urls.append(item["html_url"])
-
-    if download:
-        download_file(file_urls, folder, response_total)
-    if get_history:
-        get_commit_history(commit_urls)
-    if add_to_db:
-        add_file_to_db(file_urls, f"{specname}_{filetype}")
-
-    return vex_filetype_count
-
 def get_commit_history(vex_file: dict) -> None:
     path = vex_file["path"]
     owner = vex_file["repository"]["owner"]["login"]
     repo = vex_file["repository"]["name"]
     commit_url = f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}"
     print(commit_url)
-
-def try_database() -> None:
-    try:
-        client = MongoClient("mongo", 27017)
-        db = client.mydatabaase
-        print("successful connection")
-    except:
-        print("failed to connect")
 
 def get_search_terms() -> dict:
     search_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
@@ -144,32 +84,7 @@ def get_search_terms() -> dict:
     with open(search_file, "r") as st:
         search_terms = json.loads(st.read())
     return search_terms
-    
-def get_all_search_terms() -> list:
-    search_terms = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
-    with open(search_terms, "r") as st:
-        search_terms = json.loads(st.read())
-        return search_terms.keys()
-    
-def parse_search_term(spec_name: str, search_term: dict, download: bool, get_history: bool, add_to_db: bool, include_optional: bool) -> list:
-    vex_filetype_count = []
-    for filetype in search_term.keys():
-        extensions = search_term[filetype]['extentions']
-        keywords = search_term[filetype]['keywords']['required']
-        if include_optional:
-            keywords += search_term[filetype]['keywords']['optional']
-
-        for extension in extensions:
-            vex_filetype_count += get_github_vex_files(keywords, spec_name, filetype, extension, download, get_history, add_to_db)
-    return vex_filetype_count
-
-def iterate_all_search_terms(download: bool, get_history: bool, add_to_db: bool, include_optional: bool) -> list:
-    vex_filetype_count = []
-    keys = get_all_search_terms()
-    for key in keys:
-       vex_filetype_count += parse_search_term(key, get_search_terms(key), download, get_history, add_to_db, include_optional)
-    return vex_filetype_count
-
+       
 
 def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
     search_urls = {}
@@ -241,4 +156,3 @@ def main() -> None:
 
 if __name__ == "__main__": 
     main()
-    # print(iterate_all_search_terms(download=False, get_history=False, add_to_db=True, include_optional=True))
