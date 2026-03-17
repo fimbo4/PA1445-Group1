@@ -21,6 +21,12 @@ PAGE_LIMIT = 100
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
 def download_file(file_url: str) -> None:
+    """
+    Downloads the file to the folder vex_files/.
+    
+    Parameters
+    file_url - The html_url of the file to download
+    """
     folder = f"vex_files"
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -40,7 +46,14 @@ def download_file(file_url: str) -> None:
         os.remove(filepath)
 
 def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None:
+    """
+    Adds the file to the database under the specified collection.
 
+    Parameters
+    database - A MongoDB database, preferably VexDB
+    file_url - The html_url of the file to add
+    collection_name - The name of the collection the file is to be added to
+    """
     database.create_collection(collection_name)
 
     file_url = file_url.replace("https://", "https://raw.")
@@ -57,6 +70,15 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
         print(f"Error")
 
 def retry_request(req: str) -> requests.Response: 
+    """
+    Makes a GET request, and on a 4xx error sleeps.
+    
+    Parameters
+    req - string contaning the url
+
+    Return
+    The response object
+    """
     successful = False
     while(not successful):
         try:
@@ -71,6 +93,12 @@ def retry_request(req: str) -> requests.Response:
     return response
 
 def get_commit_history(vex_file: dict) -> None:
+    """
+    Get's the commit history of a file from Github.
+
+    Parameters
+    vex_file - A github API file
+    """
     path = vex_file["path"]
     owner = vex_file["repository"]["owner"]["login"]
     repo = vex_file["repository"]["name"]
@@ -78,6 +106,7 @@ def get_commit_history(vex_file: dict) -> None:
     print(commit_url)
 
 def get_search_terms() -> dict:
+    """Reads the search_terms.json and returns"""
     search_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
     search_terms = {}
 
@@ -87,6 +116,16 @@ def get_search_terms() -> dict:
        
 
 def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
+    """
+    Constructs Github Search url's based on the search terms.
+    One url is constructed per search criteria and extention.
+
+    Parameters
+    search_terms - A dict contaning the search parameters
+
+    Returns
+    The search url's grouped by specification
+    """
     search_urls = {}
     base_url = "https://api.github.com/search/code?q="
     url = base_url
@@ -106,6 +145,16 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
         
             
 def initial_search(search_terms: dict) -> tuple[dict[list], int]:
+    """
+    Performs the initial search to get the first page with results.
+
+    Parameters
+    search_terms - A dict contaning the search parameters
+
+    Returns
+    Adds the resulting request next to the search_url and
+    A total count of the amount of files found
+    """
     search_results = construct_search_code_urls(search_terms)
     count = 0
     for specification, content in search_results.items():
@@ -116,7 +165,16 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     
     return search_results, count
 
-def file_generator(pages) -> Generator[dict]:
+def file_generator(pages: dict[list]) -> Generator[dict]:
+    """
+    Generator for looping over the search results.
+
+    Parameters
+    pages - dictionary for each spesification, containing all base searches
+
+    Returns
+    The Github representation of a file
+    """
     for specification, searches in pages.items():
         for search in searches:
             for i in range(1, (search["request"].json()["total_count"] % PAGE_LIMIT) + 2):
@@ -127,6 +185,7 @@ def file_generator(pages) -> Generator[dict]:
                     yield item
 
 def input_arguments() -> argparse.Namespace:
+    """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
     
     parser.add_argument("-d", "--download", action="store_true", help="Downloads all the vex files to disk")
@@ -138,6 +197,13 @@ def input_arguments() -> argparse.Namespace:
     return args
 
 def main() -> None:
+    """
+    Using the Github API, it searches for the files defined in serch_terms.
+    Optionaly it can:
+        - Download the files to disk
+        - Get the commit history
+        - Add the files to the database
+    """
     args = input_arguments()
     
     search_terms = get_search_terms()
