@@ -224,21 +224,20 @@ def input_arguments() -> argparse.Namespace:
 
 def main() -> None:
     args = input_arguments()
+    
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
     
     for vex_file in tqdm.tqdm(iterable=file_generator(pages=pages), total=total_count, desc="description of what i'm doing", unit="file"):
-        pass
-        # if download:
-        #     download_file(file_urls, folder, response_total)
-        # if get_history:
-        #     get_commit_history(commit_urls)
-        # if add_to_db:
-        #     add_files_to_db(file_urls, f"{specname}_{filetype}")
         
-    # Generators!
-    
-
+        if args.download:
+            download_file(vex_file["html_url"])
+        if args.history:
+            get_commit_history(vex_file)
+        if args.database:
+            database = vexDB()
+            add_file_to_db(database, vex_file["html_url"], "debug")
+        break
 
 if __name__ == "__main__": 
     main()
