@@ -7,6 +7,7 @@ import time
 from database import vexDB
 import tqdm
 from typing import Generator
+import argparse
 
 load_dotenv()
 
@@ -218,7 +219,19 @@ def file_generator(pages) -> Generator[dict]:
                 for item in current_page.json()["items"]:
                     yield item
 
+def input_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-d", "--download", action="store_true", help="Downloads all the vex files to disk")
+    parser.add_argument("-hs", "--history", action="store_true", help="Gets the commit hostory for every vex file")
+    parser.add_argument("-db", "--database", action="store_true", help="Add the vex files to the database")
+    # include_optional
+
+    args = parser.parse_args()
+    return args
+
 def main() -> None:
+    args = input_arguments()
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
     
