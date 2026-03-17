@@ -122,9 +122,12 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
 
     return vex_filetype_count
 
-def get_commit_history(commit_urls: list) -> None:
-    for commit in commit_urls:
-        print(commit)
+def get_commit_history(vex_file: dict) -> None:
+    path = vex_file["path"]
+    owner = vex_file["repository"]["owner"]["login"]
+    repo = vex_file["repository"]["name"]
+    commit_url = f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}"
+    print(commit_url)
 
 def try_database() -> None:
     try:
