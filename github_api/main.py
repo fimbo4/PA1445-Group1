@@ -22,27 +22,24 @@ INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": Tr
 
 db = vexDB()
 
-def download_file(file_urls: list, folder: str, response_total) -> None:
+def download_file(file_url: str) -> None:
+    folder = f"vex_files"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
-    file_id = 0
+    file_url = file_url.replace("https://", "https://raw.")
+    file_url = file_url.replace("blob/", "")
 
-    for url in file_urls:
-        url = url.replace("https://", "https://raw.")
-        url = url.replace("blob/", "")
+    filename = file_url.split("/")[-1]
+    filepath = f"{folder}/{filename}"
 
-        filename = url.split("/")[-1]
-        filename = str(file_id) + "_" + filename
-        filepath = f"{folder}/{filename}"
-
-        response = requests.request("GET", url, headers=headers)
-        try: #still creates the file but content is empty
-            with open(filepath, "w") as fp: 
-                fp.write(response.content.decode("utf-8"))  
-        except:
-            print(f"Decoding error for: {filename}")
-            os.remove(filepath)
-
-        file_id += 1
+    response = retry_request(file_url)
+    try: #still creates the file but content is empty
+        with open(filepath, "w") as fp: 
+            fp.write(response.content.decode("utf-8"))  
+    except:
+        print(f"Decoding error for: {filename}")
+        os.remove(filepath)
 
 def add_files_to_db(file_urls: list, folder: str) -> None:
 
