@@ -205,11 +205,18 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
             count += request.json()["total_count"]
     
     return search_results, count
-    
+
+def file_generator(pages) -> Generator[dict]:
+    for specification, searches in pages.items():
+        for search in searches:
+            for i in range(1, (search["request"].json()["total_count"] % PAGE_LIMIT) + 2):
+                url_page = search["search_url"] + f"&page={i}"
+                current_page = retry_request(url_page)
+
+                for item in current_page.json()["items"]:
+                    yield item
 
 def main() -> None:
-    pass
-
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
     
