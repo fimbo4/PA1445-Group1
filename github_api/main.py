@@ -1,29 +1,28 @@
-import requests
-from pymongo import MongoClient
+import argparse
 import json
 import os
-from dotenv import load_dotenv
-import time
-from database import vexDB
-import tqdm
+from time import sleep
 from typing import Generator
-import argparse
+
+import requests
+import tqdm
+from database import vexDB
+from dotenv import load_dotenv
 
 load_dotenv()
 
 TOKEN = os.getenv("GITHUB_TOKEN")
 
-headers = {
-  'Authorization': f'Token {TOKEN}'
-}
+headers = {"Authorization": f"Token {TOKEN}"}
 
 PAGE_LIMIT = 100
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
+
 def download_file(file_url: str) -> None:
     """
     Downloads the file to the folder vex_files/.
-    
+
     Parameters
     file_url - The html_url of the file to download
     """
@@ -38,12 +37,13 @@ def download_file(file_url: str) -> None:
     filepath = f"{folder}/{filename}"
 
     response = retry_request(file_url)
-    try: #still creates the file but content is empty
-        with open(filepath, "w") as fp: 
-            fp.write(response.content.decode("utf-8"))  
+    try:  # still creates the file but content is empty
+        with open(filepath, "w") as fp:
+            fp.write(response.content.decode("utf-8"))
     except:
         print(f"Decoding error for: {filename}")
         os.remove(filepath)
+
 
 def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None:
     """
@@ -69,10 +69,11 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
     except Exception as error:
         print(f"Error")
 
-def retry_request(req: str) -> requests.Response: 
+
+def retry_request(req: str) -> requests.Response:
     """
     Makes a GET request, and on a 4xx error sleeps.
-    
+
     Parameters
     req - string contaning the url
 
@@ -80,17 +81,20 @@ def retry_request(req: str) -> requests.Response:
     The response object
     """
     successful = False
-    while(not successful):
+    while not successful:
         try:
             response = requests.request("GET", req, headers=headers)
             response.raise_for_status()
             successful = True
         except requests.exceptions.RequestException:
-            print(f"{req} gave status code {response.status_code}: sleeping for 1m then retrying")
-            time.sleep(60)
+            print(
+                f"{req} gave status code {response.status_code}: sleeping for 1m then retrying"
+            )
+            sleep(60)
         except Exception as e:
             print(f"Error when making request for: {req}: {e}")
     return response
+
 
 def get_commit_history(vex_file: dict) -> None:
     """
@@ -105,15 +109,18 @@ def get_commit_history(vex_file: dict) -> None:
     commit_url = f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}"
     print(commit_url)
 
+
 def get_search_terms() -> dict:
     """Reads the search_terms.json and returns"""
-    search_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'search_terms.json')
+    search_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "search_terms.json"
+    )
     search_terms = {}
 
     with open(search_file, "r") as st:
         search_terms = json.loads(st.read())
     return search_terms
-       
+
 
 def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
     """
@@ -140,10 +147,14 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
                 for keyword in type["keywords"]["optional"]:
                     url = f"{url}{keyword}+"
             for extention in type["extentions"]:
-                search_urls[specification].append({"search_url": f"{url}in:file+extension:{extention}&per_page={PAGE_LIMIT}"})
+                search_urls[specification].append(
+                    {
+                        "search_url": f"{url}in:file+extension:{extention}&per_page={PAGE_LIMIT}"
+                    }
+                )
     return search_urls
-        
-            
+
+
 def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     """
     Performs the initial search to get the first page with results.
@@ -162,8 +173,9 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
             request = retry_request(url["search_url"])
             url["request"] = request
             count += request.json()["total_count"]
-    
+
     return search_results, count
+
 
 def file_generator(pages: dict[list]) -> Generator[dict]:
     """
@@ -177,24 +189,43 @@ def file_generator(pages: dict[list]) -> Generator[dict]:
     """
     for specification, searches in pages.items():
         for search in searches:
-            for i in range(1, (search["request"].json()["total_count"] % PAGE_LIMIT) + 2):
+            for i in range(
+                1, (search["request"].json()["total_count"] % PAGE_LIMIT) + 2
+            ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
 
                 for item in current_page.json()["items"]:
                     yield item
 
+
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument("-d", "--download", action="store_true", help="Downloads all the vex files to disk")
-    parser.add_argument("-hs", "--history", action="store_true", help="Gets the commit hostory for every vex file")
-    parser.add_argument("-db", "--database", action="store_true", help="Add the vex files to the database")
+
+    parser.add_argument(
+        "-d",
+        "--download",
+        action="store_true",
+        help="Downloads all the vex files to disk",
+    )
+    parser.add_argument(
+        "-hs",
+        "--history",
+        action="store_true",
+        help="Gets the commit hostory for every vex file",
+    )
+    parser.add_argument(
+        "-db",
+        "--database",
+        action="store_true",
+        help="Add the vex files to the database",
+    )
     # include_optional
 
     args = parser.parse_args()
     return args
+
 
 def main() -> None:
     """
@@ -205,12 +236,17 @@ def main() -> None:
         - Add the files to the database
     """
     args = input_arguments()
-    
+
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
-    
-    for vex_file in tqdm.tqdm(iterable=file_generator(pages=pages), total=total_count, desc="description of what i'm doing", unit="file"):
-        
+
+    for vex_file in tqdm.tqdm(
+        iterable=file_generator(pages=pages),
+        total=total_count,
+        desc="description of what i'm doing",
+        unit="file",
+    ):
+
         if args.download:
             download_file(vex_file["html_url"])
         if args.history:
@@ -218,7 +254,7 @@ def main() -> None:
         if args.database:
             database = vexDB()
             add_file_to_db(database, vex_file["html_url"], "debug")
-        break
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     main()
