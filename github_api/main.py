@@ -20,8 +20,6 @@ headers = {
 PAGE_LIMIT = 100
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
-db = vexDB()
-
 def download_file(file_url: str) -> None:
     folder = f"vex_files"
     if not os.path.exists(folder):
@@ -41,28 +39,22 @@ def download_file(file_url: str) -> None:
         print(f"Decoding error for: {filename}")
         os.remove(filepath)
 
-def add_files_to_db(file_urls: list, folder: str) -> None:
+def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None:
 
-    file_id = 0
+    database.create_collection(collection_name)
 
-    db.create_collection(folder)
+    file_url = file_url.replace("https://", "https://raw.")
+    file_url = file_url.replace("blob/", "")
 
-    for url in file_urls:
-        url = url.replace("https://", "https://raw.")
-        url = url.replace("blob/", "")
+    filename = file_url.split("/")[-1]
 
-        filename = url.split("/")[-1]
-        filename = str(file_id) + "_" + filename
-
-        response = retry_request(url)
-        try:
-            content = response.content.decode("utf-8")
-            content = {filename: content}
-            db.add_file_to_collection(folder, content)
-        except Exception as error:
-            print(f"Error")
-
-        file_id += 1
+    response = retry_request(file_url)
+    try:
+        content = response.content.decode("utf-8")
+        content = {filename: content}
+        database.add_file_to_collection(collection_name, content)
+    except Exception as error:
+        print(f"Error")
 
 def retry_request(req: str) -> requests.Response: 
     successful = False
@@ -126,7 +118,7 @@ def get_github_vex_files(spec: list, specname: str, filetype: str, extension: st
     if get_history:
         get_commit_history(commit_urls)
     if add_to_db:
-        add_files_to_db(file_urls, f"{specname}_{filetype}")
+        add_file_to_db(file_urls, f"{specname}_{filetype}")
 
     return vex_filetype_count
 
