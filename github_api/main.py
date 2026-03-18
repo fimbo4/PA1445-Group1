@@ -195,7 +195,7 @@ def file_generator(pages: dict[list]) -> Generator[dict]:
     for specification, searches in pages.items():
         for search in searches:
             for i in range(
-                1, (search["request"].json()["total_count"] % PAGE_LIMIT) + 2
+                1, (min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT)) + 1, 10)
             ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
