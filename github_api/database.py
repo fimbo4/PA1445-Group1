@@ -22,3 +22,7 @@ class vexDB:
 
     def clear_collection(self, collection: str) -> None:
         self.db.get_collection(collection).delete_many({})
+
+    def drop_all(self) -> None:
+        for collection in self.db.list_collection_names():
+            self.db.drop_collection(collection)

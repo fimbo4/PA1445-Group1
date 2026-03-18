@@ -221,6 +221,12 @@ def input_arguments() -> argparse.Namespace:
         action="store_true",
         help="Add the vex files to the database",
     )
+    parser.add_argument(
+        "--clear-database",
+        action="store_true",
+        help="Drops all the collections in the database (deletes everything)"
+    )
+
     # include_optional
 
     args = parser.parse_args()
@@ -237,6 +243,9 @@ def main() -> None:
     """
     args = input_arguments()
 
+    if args.clear_database:
+        database = vexDB()
+        database.drop_all()
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
 
