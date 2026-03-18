@@ -84,16 +84,18 @@ def retry_request(req: str) -> requests.Response:
     while not successful:
         try:
             response = requests.request("GET", req, headers=headers)
-            response.raise_for_status()
-            successful = True
-        except requests.exceptions.RequestException:
-            print(
-                f"{req} gave status code {response.status_code}: sleeping for 1m then retrying"
-            )
-            sleep(60)
+            if response.status_code == 200:
+                return response
+            elif response.status_code == 403:
+                print(
+                    f"{req} gave status code {response.status_code}: sleeping for 1m then retrying"
+                )
+                sleep(60)
+            else:
+                response.raise_for_status()
         except Exception as e:
             print(f"Error when making request for: {req}: {e}")
-    return response
+            return None
 
 
 def get_commit_history(vex_file: dict) -> None:
@@ -171,8 +173,11 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     for specification, content in search_results.items():
         for url in content:
             request = retry_request(url["search_url"])
-            url["request"] = request
-            count += request.json()["total_count"]
+            try:
+                url["request"] = request
+                count += request.json()["total_count"]
+            except Exception as e:
+                print("initial_search request failed")
 
     return search_results, count
 
@@ -194,9 +199,11 @@ def file_generator(pages: dict[list]) -> Generator[dict]:
             ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
-
-                for item in current_page.json()["items"]:
-                    yield item
+                try:
+                    for item in current_page.json()["items"]:
+                        yield item, specification
+                except:
+                    print("file_generator() request failed")
 
 
 def input_arguments() -> argparse.Namespace:
