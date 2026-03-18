@@ -24,6 +24,17 @@ TODO: Explain how unit- or integreation tests can be executed.
 
 ### Run
 
+`github_api/main.py` accepts several flags, if no flags are specified then nothing will happen:
+```
+usage: main.py [-h] [-d] [-hs] [-db]
+
+options:
+  -h, --help       show this help message and exit
+  -d, --download   Downloads all the vex files to disk
+  -hs, --history   Gets the commit hostory for every vex file
+  -db, --database  Add the vex files to the database
+```
+
 The command `docker-compose up` run from the root directory should run the main scripts. 
 
 ## Authors
