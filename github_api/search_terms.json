@@ -1,0 +1,128 @@
+{
+    "CycloneDX": {
+        "json": {
+            "keywords": {
+                "required": [
+                    "bomFormat",
+                    "CycloneDX",
+                    "specVersion"
+                ],
+                "optional": [
+                    "vulnerabilities"
+                ]
+            },
+            "extentions": [
+                "json"
+            ]
+        },
+        "xml": {
+            "keywords": {
+                "required": [
+                    "bom",
+                    "http://cyclonedx.org/schema/bom/"
+                ],
+                "optional": [
+                    "vulnerabilities"
+                ]
+            },
+            "extentions": [
+                "xml"
+            ]
+        }
+    },
+    "CSAF": {
+        "json": {
+            "keywords": {
+                "required": [
+                    "document",
+                    "category",
+                    "csaf_version",
+                    "publisher",
+                    "title",
+                    "tracking"
+                ],
+                "optional": [
+                    "csaf_vex",
+                    "vulnerabilities"
+                ]
+            },
+            "extentions": [
+                "json"
+            ]
+        }
+    },
+    "OpenVEX": {
+        "json": {
+            "keywords": {
+                "required": [
+                    "@context",
+                    "https://openvex.dev/ns/v",
+                    "@id"
+                ],
+                "optional": []
+            },
+            "extentions": [
+                "json",
+                "jsonld"
+            ]
+        }
+    },
+    "SPDX": {
+        "jsonld": {
+            "keywords": {
+                "required": [
+                    "@context",
+                    "https://spdx.org/rdf/3.",
+                    "@graph"
+                ],
+                "optional": [
+                    "Vulnerability"
+                ]
+            },
+            "extentions": [
+                "json",
+                "jsonld"
+            ]
+        },
+        "Turtle": {
+            "keywords": {
+                "required": [
+                    "@base",
+                    "https://spdx.org/rdf/3."
+                ],
+                "optional": [
+                    "Vulnerability"
+                ]
+            },
+            "extentions": [
+                "ttl"
+            ]
+        },
+        "N-Triples": {
+            "keywords": {
+                "required": [
+                    "https://spdx.org/rdf/3."
+                ],
+                "optional": [
+                    "Vulnerability"
+                ]
+            },
+            "extentions": [
+                "nt"
+            ]
+        },
+        "xml": {
+            "keywords": {
+                "required": [
+                    "https://spdx.org/rdf/3."
+                ],
+                "optional": [
+                    "Vulnerability"
+                ]
+            },
+            "extentions": [
+                "xml"
+            ]
+        }
+    }
+}

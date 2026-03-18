@@ -1,16 +1,19 @@
 from pymongo import MongoClient
-import json
 
 class vexDB:
     def __init__(self):
-        self.client = MongoClient("localhost", 27017)
-        self.db = self.client.mydatabase
+        self.client = MongoClient("mongo", 27017)
+        self.db = self.client["mydatabase"]
 
-    def add_file_to_collection(self, collection: str, filename: str) -> None:
+    def create_collection(self, collection: str) -> None:
+        try:
+            self.db.create_collection(collection)
+        except:
+            print("collection already exists")
+
+    def add_file_to_collection(self, collection: str, contents: dict) -> None:
         collection = self.db.get_collection(collection)
-        with open (filename) as f:
-            json_data = json.load(f)
-        collection.insert_one(json_data)
+        collection.insert_one(contents)
 
     def retrieve_collection_data(self, collection: str) -> None:
         collection = self.db.get_collection(collection)
