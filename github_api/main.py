@@ -183,7 +183,7 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     return search_results, count
 
 
-def file_generator(pages: dict[list]) -> Generator[(dict, str)]:
+def file_generator(pages: dict[list]) -> Generator[dict]:
     """
     Generator for looping over the search results.
 
@@ -196,7 +196,7 @@ def file_generator(pages: dict[list]) -> Generator[(dict, str)]:
     for specification, searches in pages.items():
         for search in searches:
             for i in range(
-                1, min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT) + 1, 10)
+                1, (min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT)) + 1, 10)
             ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
@@ -254,10 +254,11 @@ def main() -> None:
     if args.clear_database:
         database = vexDB()
         database.drop_all()
+
     search_terms = get_search_terms()
     pages, total_count = initial_search(search_terms)
 
-    for vex_file in tqdm.tqdm(
+    for vex_file, vex_specification in tqdm.tqdm(
         iterable=file_generator(pages=pages),
         total=total_count,
         desc="description of what i'm doing",
@@ -270,8 +271,7 @@ def main() -> None:
             get_commit_history(vex_file)
         if args.database:
             database = vexDB()
-            add_file_to_db(database, vex_file["html_url"], "debug")
-
+            add_file_to_db(database, vex_file["html_url"], vex_specification)
 
 if __name__ == "__main__":
     main()
