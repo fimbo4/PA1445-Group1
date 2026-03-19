@@ -61,14 +61,15 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
     file_url = file_url.replace("blob/", "")
 
     filename = file_url.split("/")[-1]
+    filetype = filename.split(".")[-1]
 
     response = retry_request(file_url)
     try:
         content = response.content.decode("utf-8")
-        content = {filename: content}
+        content = {filename: content, "extension": filetype}
         database.add_file_to_collection(collection_name, content)
     except Exception as error:
-        print(f"Error")
+        print(f"Error: {error}")
 
 
 def retry_request(req: str) -> requests.Response:
