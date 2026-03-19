@@ -183,7 +183,7 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     return search_results, count
 
 
-def file_generator(pages: dict[list]) -> Generator[dict]:
+def file_generator(pages: dict[list]) -> Generator[(dict, str)]:
     """
     Generator for looping over the search results.
 
@@ -196,7 +196,7 @@ def file_generator(pages: dict[list]) -> Generator[dict]:
     for specification, searches in pages.items():
         for search in searches:
             for i in range(
-                1, (min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT)) + 1, 10)
+                1, min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT) + 1, 10)
             ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
