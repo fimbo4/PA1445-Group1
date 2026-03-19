@@ -12,8 +12,11 @@ class vexDB:
             print("collection already exists")
 
     def add_file_to_collection(self, collection: str, contents: dict) -> None:
-        collection = self.db.get_collection(collection)
-        collection.insert_one(contents)
+        try:
+            collection = self.db.get_collection(collection)
+            collection.insert_one(contents)
+        except:
+            print(f"Failed to add file to {collection}")
 
     def retrieve_collection_data(self, collection: str) -> None:
         collection = self.db.get_collection(collection)

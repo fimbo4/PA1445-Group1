@@ -38,7 +38,7 @@ def download_file(file_url: str) -> None:
     filepath = f"{folder}/{filename}"
 
     response = retry_request(file_url)
-    try:  # still creates the file but content is empty
+    try:
         with open(filepath, "w") as fp:
             fp.write(response.content.decode("utf-8"))
     except:
@@ -55,7 +55,6 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
     file_url - The html_url of the file to add
     collection_name - The name of the collection the file is to be added to
     """
-    database.create_collection(collection_name)
 
     file_url = file_url.replace("https://", "https://raw.")
     file_url = file_url.replace("blob/", "")
@@ -236,10 +235,13 @@ def input_arguments() -> argparse.Namespace:
         help="Drops all the collections in the database (deletes everything)"
     )
 
-    # include_optional
-
     args = parser.parse_args()
     return args
+
+
+def initiate_collections(db: vexDB, search_terms: dict):
+    for spec in search_terms:
+        db.create_collection(spec)
 
 
 def main() -> None:
@@ -252,18 +254,24 @@ def main() -> None:
     """
     args = input_arguments()
 
-    if args.clear_database:
+    if args.clear_database or args.database:
         database = vexDB()
+
+    if args.clear_database:
         database.drop_all()
 
     search_terms = get_search_terms()
+
+    if args.database:
+        initiate_collections(database, search_terms)
+
     pages, total_count = initial_search(search_terms)
 
     for vex_file, vex_specification in tqdm.tqdm(
         iterable=file_generator(pages=pages),
         total=total_count,
-        desc="description of what i'm doing",
-        unit="file",
+        desc="Fetching VEX files",
+        unit="files",
     ):
 
         if args.download:
@@ -271,7 +279,6 @@ def main() -> None:
         if args.history:
             get_commit_history(vex_file)
         if args.database:
-            database = vexDB()
             add_file_to_db(database, vex_file["html_url"], vex_specification)
 
 if __name__ == "__main__":
