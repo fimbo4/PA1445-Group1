@@ -17,6 +17,8 @@ TOKEN = os.getenv("GITHUB_TOKEN")
 headers = {"Authorization": f"Token {TOKEN}"}
 
 PAGE_LIMIT = 100
+GITHUB_SEARCH_LIMIT = 1000
+GITHUB_SIZE_LIMIT_B = 384000
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
 
@@ -152,7 +154,7 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
             for extention in type["extentions"]:
                 search_urls[specification].append(
                     {
-                        "search_url": f"{url}in:file+extension:{extention}&per_page={PAGE_LIMIT}"
+                        "search_url": f"{url}in:file+extension:{extention}&size:0..{GITHUB_SIZE_LIMIT_B}&per_page={PAGE_LIMIT}"
                     }
                 )
     return search_urls
