@@ -4,6 +4,7 @@ import os
 from time import sleep
 from typing import Generator
 from math import ceil
+from copy import deepcopy
 
 import requests
 import tqdm
@@ -154,11 +155,60 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
             for extention in type["extentions"]:
                 search_urls[specification].append(
                     {
-                        "search_url": f"{url}in:file+extension:{extention}&size:0..{GITHUB_SIZE_LIMIT_B}&per_page={PAGE_LIMIT}"
+                        "search_url": f"{url}in:file+extension:{extention}+size:0..{GITHUB_SIZE_LIMIT_B}&per_page={PAGE_LIMIT}"
                     }
                 )
     return search_urls
 
+def change_split(url: str, range: tuple) -> str:
+    start_location = url.find("size:")
+    end_location = url.find("&", start_location)
+    # splitter = url.find("..", start=start_location)
+    new_url = f"{url[:start_location + 5]}{range[0]}..{range[1]}{url[end_location:]}"
+    return new_url
+    
+    # ulr_parts = url.split(sep="&")
+    # for thing in ulr_parts:
+    #     if "size" in thing:
+    #         current_range = (int(thing.split("..")[0][5:]), int(thing.split("..")[1]))
+    #         break
+    
+
+def split_search(search_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)):
+    """
+    Splits a search into smaller searches base of the sizes of the files
+    """
+    splits_required = ceil(count/GITHUB_SEARCH_LIMIT)
+    range_amount = current_range[1] / splits_required
+
+    split_ranges = []
+    for i in range(splits_required):
+        split_ranges.append((
+            round(i*range_amount), #cast to int (round?)
+            round((i+1)*range_amount)
+        ))
+
+    for new_range in split_ranges:
+        new_url = change_split(url, new_range)
+        response = retry_request(new_url)
+        if "total_count" in response.json().keys() and response.json()["total_count"] > GITHUB_SEARCH_LIMIT:
+            split_search(search_results=search_results, url=new_url, count=response.json()["total_count"], specification=specification, current_range=new_range)
+        # Check if total count is not zero?
+        elif "total_count" in response.json().keys() and response.json()["total_count"] > 0:
+            search_results[specification].append(
+                {
+                    "search_url": new_url,
+                    "request": deepcopy(response)
+                }
+            )
+    # If you want to extract the range from the url:
+    # ulr_parts = url.split(sep="&")
+    # for thing in ulr_parts:
+    #     if "size" in thing:
+    #         current_range = (int(thing.split("..")[0][5:]), int(thing.split("..")[1]))
+    #         break
+    
+    # if "items" in count.keys():
 
 def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     """
@@ -171,18 +221,34 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     Adds the resulting request next to the search_url and
     A total count of the amount of files found
     """
-    search_results = construct_search_code_urls(search_terms)
-    count = 0
-    for specification, content in search_results.items():
-        for url in content:
-            request = retry_request(url["search_url"])
-            try:
-                url["request"] = request
-                count += request.json()["total_count"]
-            except Exception as e:
-                print("initial_search request failed")
+    search_urls = construct_search_code_urls(search_terms)
+    # search_result = deepcopy(search_urls)
+    search_result = {}
+    total_count = 0
 
-    return search_results, count
+    for specification, searches in search_urls.items():
+        search_result[specification] = []
+        for i, url in enumerate(searches):
+            request = retry_request(url["search_url"])
+            # search_result[specification][i]["request"] = request
+            content = request.json() 
+    
+            if "total_count" in content.keys():
+                total_count += content["total_count"]
+                if content["total_count"] > GITHUB_SEARCH_LIMIT:
+                    split_search(search_result, url["search_url"], content["total_count"], specification=specification)
+                elif content["total_count"] > 0:
+                    search_result[specification].append(
+                        {
+                            "search_url": url["search_url"],
+                            "request": deepcopy(request)
+                        }
+                    )
+            # try:
+            # except Exception as e:
+            #     print("initial_search request failed")
+
+    return search_urls, total_count
 
 
 def file_generator(pages: dict[list]) -> Generator[dict]:
