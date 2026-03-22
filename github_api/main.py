@@ -179,13 +179,13 @@ def split_search(search_results: dict[list[dict]], url: str, count: int, specifi
     Splits a search into smaller searches base of the sizes of the files
     """
     splits_required = ceil(count/GITHUB_SEARCH_LIMIT)
-    range_amount = current_range[1] / splits_required
+    range_amount = (current_range[1] - current_range[0]) / splits_required
 
     split_ranges = []
     for i in range(splits_required):
         split_ranges.append((
-            round(i*range_amount), #cast to int (round?)
-            round((i+1)*range_amount)
+            round(i*range_amount + current_range[0]),
+            round((i+1)*range_amount + current_range[0])
         ))
 
     for new_range in split_ranges:
@@ -193,7 +193,7 @@ def split_search(search_results: dict[list[dict]], url: str, count: int, specifi
         response = retry_request(new_url)
         if "total_count" in response.json().keys() and response.json()["total_count"] > GITHUB_SEARCH_LIMIT:
             split_search(search_results=search_results, url=new_url, count=response.json()["total_count"], specification=specification, current_range=new_range)
-        # Check if total count is not zero?
+        
         elif "total_count" in response.json().keys() and response.json()["total_count"] > 0:
             search_results[specification].append(
                 {
