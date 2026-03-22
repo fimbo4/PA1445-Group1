@@ -177,6 +177,16 @@ def change_split(url: str, range: tuple) -> str:
 def split_search(current_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)):
     """
     Splits a search into smaller searches base of the sizes of the files
+
+    Parameters \n
+    current_results - All the previoursly performed searches. \n
+    url - The url of the search that exeeded GITHUB_SEARCH_LIMIT. \n
+    count - How many results the fales search returned. \n
+    specification - Which spesification are we working towards. \n
+    current_range - tuple with the lower and upper bounds of the failed range. Defaults to (0, GITHUB_SIZE_LIMIT_B). 
+    
+    Returns \n
+    A new version of current_results populated with more values.
     """
     new_results = deepcopy(current_results)
     splits_required = ceil(count/GITHUB_SEARCH_LIMIT)
