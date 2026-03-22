@@ -174,10 +174,11 @@ def change_split(url: str, range: tuple) -> str:
     #         break
     
 
-def split_search(search_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)):
+def split_search(current_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)):
     """
     Splits a search into smaller searches base of the sizes of the files
     """
+    new_results = deepcopy(current_results)
     splits_required = ceil(count/GITHUB_SEARCH_LIMIT)
     range_amount = (current_range[1] - current_range[0]) / splits_required
 
@@ -192,15 +193,17 @@ def split_search(search_results: dict[list[dict]], url: str, count: int, specifi
         new_url = change_split(url, new_range)
         response = retry_request(new_url)
         if "total_count" in response.json().keys() and response.json()["total_count"] > GITHUB_SEARCH_LIMIT:
-            split_search(search_results=search_results, url=new_url, count=response.json()["total_count"], specification=specification, current_range=new_range)
+            new_results = split_search(current_results=new_results, url=new_url, count=response.json()["total_count"], specification=specification, current_range=new_range)
         
         elif "total_count" in response.json().keys() and response.json()["total_count"] > 0:
-            search_results[specification].append(
+            new_results[specification].append(
                 {
                     "search_url": new_url,
                     "request": deepcopy(response)
                 }
             )
+    return new_results
+    
     # If you want to extract the range from the url:
     # ulr_parts = url.split(sep="&")
     # for thing in ulr_parts:
@@ -236,7 +239,7 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
             if "total_count" in content.keys():
                 total_count += content["total_count"]
                 if content["total_count"] > GITHUB_SEARCH_LIMIT:
-                    split_search(search_result, url["search_url"], content["total_count"], specification=specification)
+                    search_result = split_search(search_result, url["search_url"], content["total_count"], specification=specification)
                 elif content["total_count"] > 0:
                     search_result[specification].append(
                         {
