@@ -161,20 +161,13 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
     return search_urls
 
 def change_split(url: str, range: tuple) -> str:
+    """Changes the size range on an url"""
     start_location = url.find("size:")
     end_location = url.find("&", start_location)
-    # splitter = url.find("..", start=start_location)
     new_url = f"{url[:start_location + 5]}{range[0]}..{range[1]}{url[end_location:]}"
     return new_url
-    
-    # ulr_parts = url.split(sep="&")
-    # for thing in ulr_parts:
-    #     if "size" in thing:
-    #         current_range = (int(thing.split("..")[0][5:]), int(thing.split("..")[1]))
-    #         break
-    
 
-def split_search(current_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)):
+def split_search(current_results: dict[list[dict]], url: str, count: int, specification: str, current_range=(0,GITHUB_SIZE_LIMIT_B)) -> dict[list[dict]]:
     """
     Splits a search into smaller searches base of the sizes of the files
 
@@ -214,14 +207,6 @@ def split_search(current_results: dict[list[dict]], url: str, count: int, specif
             )
     return new_results
     
-    # If you want to extract the range from the url:
-    # ulr_parts = url.split(sep="&")
-    # for thing in ulr_parts:
-    #     if "size" in thing:
-    #         current_range = (int(thing.split("..")[0][5:]), int(thing.split("..")[1]))
-    #         break
-    
-    # if "items" in count.keys():
 
 def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     """
@@ -235,7 +220,6 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     A total count of the amount of files found
     """
     search_urls = construct_search_code_urls(search_terms)
-    # search_result = deepcopy(search_urls)
     search_result = {}
     total_count = 0
 
@@ -243,7 +227,6 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
         search_result[specification] = []
         for i, url in enumerate(searches):
             request = retry_request(url["search_url"])
-            # search_result[specification][i]["request"] = request
             content = request.json() 
     
             if "total_count" in content.keys():
@@ -257,9 +240,6 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
                             "request": deepcopy(request)
                         }
                     )
-            # try:
-            # except Exception as e:
-            #     print("initial_search request failed")
 
     return search_urls, total_count
 
