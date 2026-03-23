@@ -26,3 +26,12 @@ Try at least
 
 Keep updating the VEX. 
 
+# Chapter 3
+## Article 31
+> 1.   The technical documentation shall contain all relevant data or details of the means used by the manufacturer to ensure that the product with digital elements and the processes put in place by the manufacturer comply with the essential cybersecurity requirements set out in Annex I. It shall at least contain the elements set out in Annex VII.
+
+Vex is a part of the technical documentation I would think. 
+
+> 2.   The technical documentation shall be drawn up before the product with digital elements is placed on the market and shall be continuously updated, where appropriate, at least during the support period.
+
+Again, keep the Vex updated. 
