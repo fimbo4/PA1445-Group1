@@ -46,3 +46,10 @@ Again, keep the Vex updated.
 
 You have to have a minimum VEX. And an SBOM
 
+# Annex II
+[Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R2847#anx_II)
+>9. If the manufacturer decides to make available the software bill of materials to the user, information on where the software bill of materials can be accessed.
+
+Kind of related?
+
+
