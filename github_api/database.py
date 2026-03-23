@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 
+
 class vexDB:
     def __init__(self):
         self.client = MongoClient("mongo", 27017)
