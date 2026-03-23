@@ -28,6 +28,7 @@ Keep updating the VEX.
 
 # Chapter 3
 ## Article 31
+[Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R2847#art_31)
 > 1.   The technical documentation shall contain all relevant data or details of the means used by the manufacturer to ensure that the product with digital elements and the processes put in place by the manufacturer comply with the essential cybersecurity requirements set out in Annex I. It shall at least contain the elements set out in Annex VII.
 
 Vex is a part of the technical documentation I would think. 
@@ -35,3 +36,13 @@ Vex is a part of the technical documentation I would think.
 > 2.   The technical documentation shall be drawn up before the product with digital elements is placed on the market and shall be continuously updated, where appropriate, at least during the support period.
 
 Again, keep the Vex updated. 
+
+# Annex I
+## Part II
+[Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R2847#anx_I)
+>Manufacturers of products with digital elements shall:
+>
+>   (1) identify and document vulnerabilities and components contained in products with digital elements, including by drawing up a software bill of materials in a commonly used and machine-readable format covering at the very least the top-level dependencies of the products;
+
+You have to have a minimum VEX. And an SBOM
+
