@@ -1,9 +1,10 @@
 from pymongo import MongoClient
 
+
 class vexDB:
     def __init__(self):
         self.client = MongoClient("mongo", 27017)
-        self.db = self.client["mydatabase"]
+        self.db = self.client["Vex"]
 
     def create_collection(self, collection: str) -> None:
         try:

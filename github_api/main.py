@@ -1,9 +1,10 @@
 import argparse
 import json
 import os
+from copy import deepcopy
+from math import ceil
 from time import sleep
 from typing import Generator
-from math import ceil
 
 import requests
 import tqdm
@@ -17,6 +18,8 @@ TOKEN = os.getenv("GITHUB_TOKEN")
 headers = {"Authorization": f"Token {TOKEN}"}
 
 PAGE_LIMIT = 100
+GITHUB_SEARCH_LIMIT = 1000
+GITHUB_SIZE_LIMIT_B = 384000
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
 
 
@@ -152,10 +155,76 @@ def construct_search_code_urls(search_terms: dict) -> dict[list[dict]]:
             for extention in type["extentions"]:
                 search_urls[specification].append(
                     {
-                        "search_url": f"{url}in:file+extension:{extention}&per_page={PAGE_LIMIT}"
+                        "search_url": f"{url}in:file+extension:{extention}+size:0..{GITHUB_SIZE_LIMIT_B}&per_page={PAGE_LIMIT}"
                     }
                 )
     return search_urls
+
+
+def change_split(url: str, range: tuple) -> str:
+    """Changes the size range on an url"""
+    start_location = url.find("size:")
+    end_location = url.find("&", start_location)
+    new_url = f"{url[:start_location + 5]}{range[0]}..{range[1]}{url[end_location:]}"
+    return new_url
+
+
+def split_search(
+    current_results: dict[list[dict]],
+    url: str,
+    count: int,
+    specification: str,
+    current_range=(0, GITHUB_SIZE_LIMIT_B),
+) -> dict[list[dict]]:
+    """
+    Splits a search into smaller searches base of the sizes of the files
+
+    Parameters \n
+    current_results - All the previoursly performed searches. \n
+    url - The url of the search that exeeded GITHUB_SEARCH_LIMIT. \n
+    count - How many results the fales search returned. \n
+    specification - Which spesification are we working towards. \n
+    current_range - tuple with the lower and upper bounds of the failed range. Defaults to (0, GITHUB_SIZE_LIMIT_B).
+
+    Returns \n
+    A new version of current_results populated with more values.
+    """
+    new_results = deepcopy(current_results)
+    splits_required = ceil(count / GITHUB_SEARCH_LIMIT)
+    range_amount = (current_range[1] - current_range[0]) / splits_required
+
+    split_ranges = []
+    for i in range(splits_required):
+        split_ranges.append(
+            (
+                round(i * range_amount + current_range[0]),
+                round((i + 1) * range_amount + current_range[0]),
+            )
+        )
+
+    for new_range in split_ranges:
+        new_url = change_split(url, new_range)
+        response = retry_request(new_url)
+        if (
+            "total_count" in response.json().keys()
+            and response.json()["total_count"] > GITHUB_SEARCH_LIMIT
+        ):
+            new_results = split_search(
+                current_results=new_results,
+                url=new_url,
+                count=response.json()["total_count"],
+                specification=specification,
+                current_range=new_range,
+            )
+
+        elif (
+            "total_count" in response.json().keys()
+            and response.json()["total_count"] > 0
+        ):
+            new_results[specification].append(
+                {"search_url": new_url, "request": deepcopy(response)}
+            )
+    return new_results
 
 
 def initial_search(search_terms: dict) -> tuple[dict[list], int]:
@@ -169,18 +238,31 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     Adds the resulting request next to the search_url and
     A total count of the amount of files found
     """
-    search_results = construct_search_code_urls(search_terms)
-    count = 0
-    for specification, content in search_results.items():
-        for url in content:
-            request = retry_request(url["search_url"])
-            try:
-                url["request"] = request
-                count += request.json()["total_count"]
-            except Exception as e:
-                print("initial_search request failed")
+    search_urls = construct_search_code_urls(search_terms)
+    search_result = {}
+    total_count = 0
 
-    return search_results, count
+    for specification, searches in search_urls.items():
+        search_result[specification] = []
+        for i, url in enumerate(searches):
+            request = retry_request(url["search_url"])
+            content = request.json()
+
+            if "total_count" in content.keys():
+                total_count += content["total_count"]
+                if content["total_count"] > GITHUB_SEARCH_LIMIT:
+                    search_result = split_search(
+                        search_result,
+                        url["search_url"],
+                        content["total_count"],
+                        specification=specification,
+                    )
+                elif content["total_count"] > 0:
+                    search_result[specification].append(
+                        {"search_url": url["search_url"], "request": deepcopy(request)}
+                    )
+
+    return search_urls, total_count
 
 
 def file_generator(pages: dict[list]) -> Generator[dict]:
@@ -196,7 +278,8 @@ def file_generator(pages: dict[list]) -> Generator[dict]:
     for specification, searches in pages.items():
         for search in searches:
             for i in range(
-                1, min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT) + 1, 10)
+                1,
+                min(ceil(search["request"].json()["total_count"] / PAGE_LIMIT) + 1, 10),
             ):
                 url_page = search["search_url"] + f"&page={i}"
                 current_page = retry_request(url_page)
@@ -232,7 +315,7 @@ def input_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--clear-database",
         action="store_true",
-        help="Drops all the collections in the database (deletes everything)"
+        help="Drops all the collections in the database (deletes everything)",
     )
 
     args = parser.parse_args()
@@ -280,6 +363,7 @@ def main() -> None:
             get_commit_history(vex_file)
         if args.database:
             add_file_to_db(database, vex_file["html_url"], vex_specification)
+
 
 if __name__ == "__main__":
     main()
