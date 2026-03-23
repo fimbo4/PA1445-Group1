@@ -52,4 +52,9 @@ You have to have a minimum VEX. And an SBOM
 
 Kind of related?
 
+# Annex VII
+[Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847#anx_VII)
+> 2.
+>   (b) necessary information and specifications of the vulnerability handling processes put in place by the manufacturer, including the software bill of materials, the coordinated vulnerability disclosure policy, evidence of the provision of a contact address for the reporting of the vulnerabilities and a description of the technical solutions chosen for the secure distribution of updates;
 
+Might be of import?
