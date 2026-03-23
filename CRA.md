@@ -18,3 +18,11 @@ Again Part I of Annex I.
 
 This one basically says that you shall have an SBOM with a VEX. At least that is how I am interpriting it. 
 
+> 5.   For the purpose of complying with paragraph 1, manufacturers shall exercise due diligence when integrating components sourced from third parties so that those components do not compromise the cybersecurity of the product with digital elements, including when integrating components of free and open-source software that have not been made available on the market in the course of a commercial activity.
+
+Try at least
+
+> 7.   The manufacturers shall systematically document, in a manner that is proportionate to the nature and the cybersecurity risks, relevant cybersecurity aspects concerning the products with digital elements, including vulnerabilities of which they become aware and any relevant information provided by third parties, and shall, where applicable, update the cybersecurity risk assessment of the products.
+
+Keep updating the VEX. 
+
