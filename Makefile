@@ -1,5 +1,11 @@
-install: ## Install requirements
+installPython: ## Installs python packeges
 	pip install -r github_api/requirements.txt
+
+install: installPython installMongodbTools	## Install requirements
+
+installMongodbTools:	## Installs Mongodb tools
+	chmod +x install_MongoDB_Tools.sh
+	./install_MongoDB_Tools.sh
 
 run: ## This will create and start the containers for both the database and the main api script
 	docker-compose up
