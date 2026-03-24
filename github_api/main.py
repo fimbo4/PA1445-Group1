@@ -49,7 +49,7 @@ def download_file(file_url: str) -> None:
         os.remove(filepath)
 
 
-def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None:
+def add_file_to_db(database: vexDB, file_url: str, collection_name: str, commit_url) -> None:
     """
     Adds the file to the database under the specified collection.
 
@@ -58,7 +58,8 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
     file_url - The html_url of the file to add
     collection_name - The name of the collection the file is to be added to
     """
-
+    
+    original_url = file_url
     file_url = file_url.replace("https://", "https://raw.")
     file_url = file_url.replace("blob/", "")
 
@@ -68,7 +69,14 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str) -> None
     response = retry_request(file_url)
     try:
         content = response.content.decode("utf-8")
-        content = {filename: content, "extension": filetype}
+        content = {"filename": filename, 
+                   "file": content, 
+                   "specification": collection_name, 
+                   "extension": filetype, 
+                   "file_url": original_url, 
+                   "raw_url": file_url, 
+                   "commit_url": commit_url}
+        
         database.add_file_to_collection(collection_name, content)
     except Exception as error:
         print(f"Error: {error}")
@@ -113,7 +121,7 @@ def get_commit_history(vex_file: dict) -> None:
     owner = vex_file["repository"]["owner"]["login"]
     repo = vex_file["repository"]["name"]
     commit_url = f"http://api.github.com/repos/{owner}/{repo}/commits?path={path}"
-    print(commit_url)
+    return commit_url
 
 
 def get_search_terms() -> dict:
@@ -262,7 +270,7 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
                         {"search_url": url["search_url"], "request": deepcopy(request)}
                     )
 
-    return search_urls, total_count
+    return search_result, total_count
 
 
 def file_generator(pages: dict[list]) -> Generator[dict]:
@@ -356,13 +364,15 @@ def main() -> None:
         desc="Fetching VEX files",
         unit="files",
     ):
+        
+        file_commits = ""
 
         if args.download:
             download_file(vex_file["html_url"])
         if args.history:
-            get_commit_history(vex_file)
+            file_commits = get_commit_history(vex_file)
         if args.database:
-            add_file_to_db(database, vex_file["html_url"], vex_specification)
+            add_file_to_db(database, vex_file["html_url"], vex_specification, file_commits)
 
 
 if __name__ == "__main__":
