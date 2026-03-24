@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 from copy import deepcopy
+from datetime import datetime
 from math import ceil
 from time import sleep
 from typing import Generator
@@ -21,6 +22,11 @@ PAGE_LIMIT = 100
 GITHUB_SEARCH_LIMIT = 1000
 GITHUB_SIZE_LIMIT_B = 384000
 INCLUDE_OPTIONAL = {"CycloneDX": True, "CSAF": True, "OpenVEX": True, "SPDX": True}
+
+
+def check_token() -> requests.Request:
+    url = "https://api.github.com/rate_limit"
+    return retry_request(url)
 
 
 def download_file(file_url: str) -> None:
@@ -103,10 +109,20 @@ def retry_request(req: str) -> requests.Response:
             if response.status_code == 200:
                 return response
             elif response.status_code == 403:
+                token = check_token()
+                content = token.json()["resources"]
+                now = datetime.now()
+                if content["code_search"]["limit"] == content["code_search"]["used"]:
+                    reset_time_unix = content["code_search"]["reset"]
+                elif content["search"]["limit"] == content["search"]["used"]:
+                    reset_time_unix = content["search"]["reset"]
+                elif content["core"]["limit"] == content["core"]["used"]:
+                    reset_time_unix = content["core"]["reset"]
+                sleep_time = max(reset_time_unix - now.timestamp(), 0)
                 print(
-                    f"{req} gave status code {response.status_code}: sleeping for 1m then retrying"
+                    f"{req} gave status code {response.status_code}: sleeping for {sleep_time} sec then retrying"
                 )
-                sleep(60)
+                sleep(sleep_time)
             else:
                 response.raise_for_status()
         except Exception as e:
