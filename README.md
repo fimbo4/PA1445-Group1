@@ -10,8 +10,14 @@ It is recomended to use the dev container for isolation and to have all the help
 
 Most commands can be run with make, see the [make file](Makefile) or run `make help`:
 ```
+dump                           Creats a mongodump of the database
 help                           Show this help
 install                        Install requirements
+installMongodbTools            Installs Mongodb tools
+installPython                  Installs python packeges
+lint                           Uses black and isort to lint github_api
+restore                        Restores the database from a mongodump
+run                            This will create and start the containers for both the database and the main api script
 ```
 
 ### Prerequisites
