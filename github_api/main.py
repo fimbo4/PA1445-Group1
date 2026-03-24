@@ -49,7 +49,9 @@ def download_file(file_url: str) -> None:
         os.remove(filepath)
 
 
-def add_file_to_db(database: vexDB, file_url: str, collection_name: str, commit_url) -> None:
+def add_file_to_db(
+    database: vexDB, file_url: str, collection_name: str, commit_url
+) -> None:
     """
     Adds the file to the database under the specified collection.
 
@@ -58,7 +60,7 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str, commit_
     file_url - The html_url of the file to add
     collection_name - The name of the collection the file is to be added to
     """
-    
+
     original_url = file_url
     file_url = file_url.replace("https://", "https://raw.")
     file_url = file_url.replace("blob/", "")
@@ -69,14 +71,16 @@ def add_file_to_db(database: vexDB, file_url: str, collection_name: str, commit_
     response = retry_request(file_url)
     try:
         content = response.content.decode("utf-8")
-        content = {"filename": filename, 
-                   "file": content, 
-                   "specification": collection_name, 
-                   "extension": filetype, 
-                   "file_url": original_url, 
-                   "raw_url": file_url, 
-                   "commit_url": commit_url}
-        
+        content = {
+            "filename": filename,
+            "file": content,
+            "specification": collection_name,
+            "extension": filetype,
+            "file_url": original_url,
+            "raw_url": file_url,
+            "commit_url": commit_url,
+        }
+
         database.add_file_to_collection(collection_name, content)
     except Exception as error:
         print(f"Error: {error}")
@@ -364,7 +368,7 @@ def main() -> None:
         desc="Fetching VEX files",
         unit="files",
     ):
-        
+
         file_commits = ""
 
         if args.download:
@@ -372,7 +376,9 @@ def main() -> None:
         if args.history:
             file_commits = get_commit_history(vex_file)
         if args.database:
-            add_file_to_db(database, vex_file["html_url"], vex_specification, file_commits)
+            add_file_to_db(
+                database, vex_file["html_url"], vex_specification, file_commits
+            )
 
 
 if __name__ == "__main__":
