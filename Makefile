@@ -15,10 +15,10 @@ lint: ## Uses black and isort to lint github_api
 	isort github_api/
 
 dump: ## Creats a mongodump of the database
-	mongodump --host=mongo:27017
+	mongodump --host=mongo:27017 --db=Vex
 
 restore: ## Restores the database from a mongodump
-	mongorestore --host=mongo:27017
+	mongorestore --host=mongo:27017 
 
 # Thanks to Andreas Bauer
 help: ## Show this help
