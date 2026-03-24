@@ -4,7 +4,7 @@ installPython: ## Installs python packeges
 install: installPython installMongodbTools	## Install requirements
 
 installMongodbTools:	## Installs Mongodb tools
-	chmod +x install_MongoDB_Tools.sh
+	sudo chmod +x install_MongoDB_Tools.sh
 	./install_MongoDB_Tools.sh
 
 run: ## This will create and start the containers for both the database and the main api script
@@ -13,6 +13,12 @@ run: ## This will create and start the containers for both the database and the 
 lint: ## Uses black and isort to lint github_api
 	python -m black github_api/
 	isort github_api/
+
+dump: ## Creats a mongodump of the database
+	mongodump --host=mongo:27017
+
+restore: ## Restores the database from a mongodump
+	mongorestore --host=mongo:27017
 
 # Thanks to Andreas Bauer
 help: ## Show this help
