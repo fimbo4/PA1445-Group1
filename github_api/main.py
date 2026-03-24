@@ -50,7 +50,7 @@ def download_file(file_url: str) -> None:
 
 
 def add_file_to_db(
-    database: vexDB, file_url: str, collection_name: str, commit_url
+    database: vexDB, file_url: str, collection_name: str, commit_url: str
 ) -> None:
     """
     Adds the file to the database under the specified collection.
