@@ -38,14 +38,27 @@ Vex is a part of the technical documentation I would think.
 Again, keep the Vex updated. 
 
 # Annex I
-## Part II
 [Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R2847#anx_I)
+## Part I
+> 2.
+>   (a) be made available on the market without known exploitable vulnerabilities;
+>   (j)   be designed, developed and produced to limit attack surfaces, including external interfaces;
+Vex could maybe help? At a strech
+## Part II
 >Manufacturers of products with digital elements shall:
 >
 >   (1) identify and document vulnerabilities and components contained in products with digital elements, including by drawing up a software bill of materials in a commonly used and machine-readable format covering at the very least the top-level dependencies of the products;
 
 You have to have a minimum VEX. And an SBOM
+>   (4) once a security update has been made available, share and publicly disclose information about fixed vulnerabilities, including a description of the vulnerabilities, information allowing users to identify the product with digital elements affected, the impacts of the vulnerabilities, their severity and clear and accessible information helping users to remediate the vulnerabilities; in duly justified cases, where manufacturers consider the security risks of publication to outweigh the security benefits, they may delay making public information regarding a fixed vulnerability until after users have been given the possibility to apply the relevant patch;
+Kind of? If it's not about the database that is
 
+>   (5) put in place and enforce a policy on coordinated vulnerability disclosure;
+if take literaly
+
+>   (6) take measures to facilitate the sharing of information about potential vulnerabilities in their product with digital elements as well as in third-party components contained in that product, including by providing a contact address for the reporting of the vulnerabilities discovered in the product with digital elements;
+
+I'd say mostly SBOM but if tex is a part of that sure
 # Annex II
 [Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R2847#anx_II)
 >9. If the manufacturer decides to make available the software bill of materials to the user, information on where the software bill of materials can be accessed.
