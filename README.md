@@ -22,6 +22,8 @@ run                            This will create and start the containers for bot
 
 ### Prerequisites
 
+Git-Lfs (Large File Storage) is needed for the dump files and can be installed with `sudo apt-get install git-lfs` and then `git lfs install`.
+
 To use you need a GitHub Personal Access Token (PAT) which you can then place in a `.env` file with this name GITHUB_TOKEN="". An example `.env` can be found [here](example.env). As of writing only the classic PAT can access the `seach/code` needed to search for the VEX files. To create a PAT please follow [GitHub's instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic). The `.env` file should then be placed in the github_api folder. While the scripts can be run as on any machine we recommend using docker and the associated devcontainer or compose file. 
 
 ### Test
