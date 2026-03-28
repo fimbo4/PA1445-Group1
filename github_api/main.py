@@ -252,7 +252,6 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     """
     search_urls = construct_search_code_urls(search_terms)
     search_result = {}
-    total_count = 0
 
     for specification, searches in search_urls.items():
         search_result[specification] = []
@@ -261,7 +260,6 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
             content = request.json()
 
             if "total_count" in content.keys():
-                total_count += content["total_count"]
                 if content["total_count"] > GITHUB_SEARCH_LIMIT:
                     search_result = split_search(
                         search_result,
@@ -274,7 +272,12 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
                         {"search_url": url["search_url"], "request": deepcopy(request)}
                     )
 
-    return search_result, total_count
+    result_count = 0
+    for specification, searches in search_result.items():
+        for search in searches:
+            result_count += search["request"].json()["total_count"]
+    
+    return search_result, result_count
 
 
 def file_generator(pages: dict[list]) -> Generator[dict]:

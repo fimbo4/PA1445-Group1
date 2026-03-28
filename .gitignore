@@ -6,3 +6,4 @@ github_api/__pycache__
 !github_api/search_terms.json
 *.ct
 *.xml
+dump
