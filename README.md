@@ -16,6 +16,7 @@ install                        Install requirements
 installMongodbTools            Installs Mongodb tools
 installPython                  Installs python packeges
 lint                           Uses black and isort to lint github_api
+restoreDump2026                Restores the database from the dump_2026-03-25
 restore                        Restores the database from a mongodump
 run                            This will create and start the containers for both the database and the main api script
 ```

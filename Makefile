@@ -20,7 +20,7 @@ dump: ## Creats a mongodump of the database
 restore: ## Restores the database from a mongodump
 	mongorestore --host=mongo:27017 --gzip
 
-restoreDump2026:
+restoreDump2026:	## Restores the database from the dump_2026-03-25
 	mongorestore --host=mongo:27017 --gzip ./dump_2026-03-25
 
 # Thanks to Andreas Bauer
