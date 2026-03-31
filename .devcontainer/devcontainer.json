@@ -1,6 +1,9 @@
 {
     "name": "development",
     "dockerComposeFile": "docker-compose.yaml",
+    "forwardPorts": [
+        "mongo:27017"
+    ],
     "service": "development",
     "workspaceFolder": "/workspace",
     "postCreateCommand": "make install"
