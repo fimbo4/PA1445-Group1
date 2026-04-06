@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-
+from typing import Generator
 
 class vexDB:
     def __init__(self):
@@ -19,10 +19,10 @@ class vexDB:
         except:
             print(f"Failed to add file to {collection}")
 
-    def retrieve_collection_data(self, collection: str) -> None:
+    def retrieve_collection_data(self, collection: str) -> Generator[dict]:
         collection = self.db.get_collection(collection)
         for item in collection.find():
-            print(item)
+            yield item
 
     def clear_collection(self, collection: str) -> None:
         self.db.get_collection(collection).delete_many({})
