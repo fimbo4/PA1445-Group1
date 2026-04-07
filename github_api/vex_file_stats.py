@@ -1,8 +1,8 @@
-import pandas as pd
+#import pandas as pd
 import json
 from database import vexDB
 from statistics import mean, median, mode
-from flatten_json import flatten
+#from flatten_json import flatten
 
 def openvex_analysis(db: vexDB):
     """
