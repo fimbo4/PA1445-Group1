@@ -12,10 +12,16 @@ def openvex_analysis(db: vexDB):
     failed_to_read = 0
     num_files = 0
     filetypes = {}
+    repositories = {}
     statements = []
 
     vex_files = db.retrieve_collection_data("OpenVEX")
     for file in vex_files:
+        commit_url = file["commit_url"]
+        temp, repo = commit_url.split("repos/")
+        repo = repo.split("/", 2)[0] + "/" + repo.split("/", 2)[1]
+        repositories[repo] = repositories.setdefault(repo, 0) + 1
+        #print(repo)
         filetypes[file["extension"]] = filetypes.setdefault(file["extension"], 0) + 1
         num_files += 1
         try:
@@ -27,12 +33,13 @@ def openvex_analysis(db: vexDB):
         #pandas_json = pd.DataFrame(pd.json_normalize(vex_contents))
         #flat_json = flatten(vex_contents)
     
-    print("Median statements: ", median(statements))
-    print("Mean statements: ", mean(statements))
-    print("Mode statements: ", mode(statements))
-    print("Failed to read: ", failed_to_read)
-    print("Number of files: ", num_files)
-    print(filetypes)
+    # print("Median statements: ", median(statements))
+    # print("Mean statements: ", mean(statements))
+    # print("Mode statements: ", mode(statements))
+    # print("Failed to read: ", failed_to_read)
+    # print("Number of files: ", num_files)
+    # print(filetypes)
+    return repositories
 
 def cyclonedx_analysis(db: vexDB):
     failed_to_read = 0
