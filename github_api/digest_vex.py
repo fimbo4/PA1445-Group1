@@ -66,18 +66,45 @@ def input_arguments() -> argparse.Namespace:
     return args
 
 def main() -> None:
+    args = input_arguments()
+    tools = {
+        "OpenVEX": {},
+        "CSAF": {},
+        "CycloneDX": {},
+        "SPDX": {}
+        }
+    
     database = vexDB()
     document_count = database.count_documents()
-    for document, spesification in tqdm(database.get_all_documents(), desc="Analyzing document", total=document_count, unit="documents"):
+    errors = []
+    for document, spesification in tqdm(database.get_all_documents(), desc="Analyzing documents", total=document_count, unit="documents"):
         match (document["extension"]):
             case "json" | "jsonld":
                 # Cast file to dict
-                vex = jsonc.loads(document["file"], )
+                try:
+                    vex = jsonc.loads(document["file"], )
+                except Exception as err:
+                    log = {
+                        "id":  document["_id"],
+                        "extention": document["extension"],
+                        "error": err.__str__()
+                    }
+                    errors.append(log)
+                    continue
                 # Set extention variable (enum for readability?)
                 extention = Extentions.JSON
             case "xml":
                 # Cast file to xml tree
-                vex = ET.fromstring(document["file"])
+                try:
+                    vex = ET.fromstring(document["file"])
+                except Exception as err:
+                    log = {
+                        "id":  document["_id"],
+                        "extention": document["extension"],
+                        "error": err.__str__()
+                    }
+                    errors.append(log)
+                    continue
                 # Set extention variable (enum for readability?)
                 extention = Extentions.XML
             case _:
