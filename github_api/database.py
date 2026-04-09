@@ -31,6 +31,14 @@ class vexDB:
             for document in self.retrieve_collection_data(collection):
                 yield document
 
+    def count_documents(self) -> int:
+        filter = {"name": {"$regex": r"^(?!system\.)"}} # Ignores the system collections
+        collections = self.db.list_collection_names(filter=filter)
+        count = 0
+        for collection in collections:
+            count += self.db.get_collection(collection).count_documents(filter={})
+        return count
+
     def clear_collection(self, collection: str) -> None:
         self.db.get_collection(collection).delete_many({})
 

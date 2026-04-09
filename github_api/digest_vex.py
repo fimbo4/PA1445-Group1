@@ -1,6 +1,6 @@
 from database import vexDB
+from tqdm import tqdm
 
-# 1 get data from database
 # 2 transform into pythonic data structure (in db file?)
 # 3 gather vex spesific datapoints
 # 3.a Average vulnerabilities per file
@@ -11,10 +11,12 @@ from database import vexDB
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
-
-
 def main() -> None:
-    pass
+    database = vexDB()
+    document_count = database.count_documents()
+    for document in tqdm(database.get_all_documents(), desc="Analyzing document", total=document_count, unit="documents"):
+        pass
+
 
 if __name__ == "__main__":
     main()
