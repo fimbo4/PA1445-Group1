@@ -3,6 +3,7 @@ from tqdm import tqdm
 import jsonc # Helps with parsing illegal Json
 from enum import Enum
 import xml.etree.ElementTree as ET
+import argparse
 
 class Extentions(Enum):
     JSON = 1
@@ -16,6 +17,53 @@ class Extentions(Enum):
 # 3.e Vulnerability status
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
+
+def input_arguments() -> argparse.Namespace:
+    """Defines input arguments, use -h or --help to find out more."""
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Performs all the different analyses",
+    )
+    parser.add_argument(
+        "-t",
+        "--tools",
+        action="store_true",
+        help="Analyses the tool usage",
+    )
+    parser.add_argument(
+        "-v",
+        "--verions",
+        action="store_true",
+        help="Analyses the different versions of the spesifications",
+    )
+    parser.add_argument(
+        "-db"
+        "--databases",
+        action="store_true",
+        help="Analyses the different databases used",
+    )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Analyses the different statuses the vulnerabilites has"
+    )
+    parser.add_argument(
+        "--severity",
+        action="store_true",
+        help="Analyses the severity the culnerabilites has"
+    )
+    parser.add_argument(
+        "-p",
+        "--plots",
+        action="store_true",
+        help="Creats plots for any analyses performed. Stored in the /plots folder"
+    )
+
+    args = parser.parse_args()
+    return args
 
 def main() -> None:
     database = vexDB()
