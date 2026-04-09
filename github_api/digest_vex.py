@@ -4,6 +4,9 @@ import jsonc # Helps with parsing illegal Json
 from enum import Enum
 import xml.etree.ElementTree as ET
 import argparse
+import os
+from collections import defaultdict
+from copy import deepcopy
 
 class Extentions(Enum):
     JSON = 1
@@ -18,19 +21,56 @@ class Extentions(Enum):
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
-def tools_analysis(vex, extention: Extentions, spesification: str, tools: dict) -> dict:
+def tools_analysis(vex, extention: Extentions, spesification: str, buckets: dict) -> dict:
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "tooling" in vex.keys():
-            tools["OpenVEX"][vex["tooling"]] = tools.setdefault(vex["tooling"], 0) + 1
-            tools["OpenVEX"]["count"] = tools.setdefault("count", 0) + 1
-        elif spesification == "CSAF":
-            tools["CSAF"][vex["document"]["publisher"]["name"]] = tools.setdefault(vex["document"]["publisher"]["name"], 0) + 1
-            tools["CSAF"]["count"] = tools.setdefault("count", 0) + 1
-        elif spesification == "CycloneDX":
-            pass
+            buckets["OpenVEX"][vex["tooling"]] += 1
+            buckets["OpenVEX"]["count"] += 1
+        
+        elif spesification == "CSAF" and "document" in vex.keys():
+            # CSAF dosen't have a "tools" field, but a tool could be a publisher. 
+            buckets["CSAF"][vex["document"]["publisher"]["name"]] += 1
+            buckets["CSAF"]["count"] += 1
+        
+        elif (spesification == "CycloneDX"  and 
+              type(vex) == dict and
+              "metadata" in vex.keys() and 
+              "tools" in vex["metadata"].keys() and
+              len(vex["metadata"]["tools"]) != 0):
+            if type(vex["metadata"]["tools"]) == dict:
+                # "services"
+                if "components" in vex["metadata"]["tools"].keys():
+                    tools = vex["metadata"]["tools"]["components"]
+                elif "services" in vex["metadata"]["tools"]:
+                    tools = vex["metadata"]["tools"]["services"]
+            elif type(vex["metadata"]["tools"]) == list:
+                tools = vex["metadata"]["tools"]
+            for tool in tools:
+                if "externalReferences" in tool.keys():
+                    buckets["CycloneDX"][tool["name"]] += 1
+                elif "vendor" in tool.keys():
+                    buckets["CycloneDX"][tool["name"]] += 1
+                elif "type" in tool.keys() and tool["type"] == "application":
+                    buckets["CycloneDX"][tool["name"]] += 1
+                else:
+                    # Services
+                    # Providers
+                    # framework
+                    buckets["CycloneDX"][tool["name"]] += 1
+
+                buckets["CycloneDX"]["count"] += 1
+            # tools["CycloneDX"][vex["metadata"]["tools"]["name"]] = tools.setdefault(vex["metadata"]["tools"]["name"], 0) + 1
+        
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            for entry in vex["@graph"]:
+                if entry["type"] == "CreationInfo" and "createdUsing" in entry.keys():
+                    for tool in entry["createdUsing"]:
+                        buckets["SPDX"][tool] += 1
+                        buckets["SPDX"]["count"] += 1
+
     elif extention == Extentions.XML:
         pass
-    return tools
+    return buckets
 
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
@@ -81,11 +121,12 @@ def input_arguments() -> argparse.Namespace:
 
 def main() -> None:
     args = input_arguments()
+    empty_dict = defaultdict(int)
     tools = {
-        "OpenVEX": {},
-        "CSAF": {},
-        "CycloneDX": {},
-        "SPDX": {}
+        "OpenVEX": deepcopy(empty_dict),
+        "CSAF": deepcopy(empty_dict),
+        "CycloneDX": deepcopy(empty_dict),
+        "SPDX": deepcopy(empty_dict)
         }
     
     database = vexDB()
@@ -124,10 +165,16 @@ def main() -> None:
             case _:
                 print("Unknown extention. Skipping")
         
+        # Skip schema documents
+        if (document["filename"].count("schema") > 0 or
+            (type(vex) == dict and "$schema" in vex.keys())):
+            continue
+
         # Analysis
         if (args.tools or args.all):
-            tools = tools_analysis(vex=vex, extention=extention, spesification=spesification, tools=tools)
+            tools = tools_analysis(vex=vex, extention=extention, spesification=spesification, buckets=tools)
     pass
+
 
 if __name__ == "__main__":
     main()
