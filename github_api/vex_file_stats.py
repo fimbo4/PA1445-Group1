@@ -2,7 +2,21 @@
 import json
 from database import vexDB
 from statistics import mean, median, mode
-#from flatten_json import flatten
+
+def repository_categorizer(db: vexDB, collection: str):
+
+    repositories = {}
+    vex_files = db.retrieve_collection_data(collection)
+    num_files = 0
+
+    for file in vex_files:
+        commit_url = file["commit_url"]
+        repo = commit_url.split("repos/")
+        repo = repo[1].split("/", 2)[0] + "/" + repo[1].split("/", 2)[1]
+        repositories[repo] = repositories.setdefault(repo, 0) + 1
+        num_files += 1
+    
+    return repositories, num_files
 
 def openvex_analysis(db: vexDB):
     """
