@@ -32,7 +32,7 @@ def openvex_analysis(db: vexDB):
     vex_files = db.retrieve_collection_data("OpenVEX")
     for file in vex_files:
         commit_url = file["commit_url"]
-        temp, repo = commit_url.split("repos/")
+        _, repo = commit_url.split("repos/")
         repo = repo.split("/", 2)[0] + "/" + repo.split("/", 2)[1]
         repositories[repo] = repositories.setdefault(repo, 0) + 1
         #print(repo)
