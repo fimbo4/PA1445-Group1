@@ -18,6 +18,20 @@ class Extentions(Enum):
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
+def tools_analysis(vex, extention: Extentions, spesification: str, tools: dict) -> dict:
+    if extention == Extentions.JSON:
+        if spesification == "OpenVEX" and "tooling" in vex.keys():
+            tools["OpenVEX"][vex["tooling"]] = tools.setdefault(vex["tooling"], 0) + 1
+            tools["OpenVEX"]["count"] = tools.setdefault("count", 0) + 1
+        elif spesification == "CSAF":
+            tools["CSAF"][vex["document"]["publisher"]["name"]] = tools.setdefault(vex["document"]["publisher"]["name"], 0) + 1
+            tools["CSAF"]["count"] = tools.setdefault("count", 0) + 1
+        elif spesification == "CycloneDX":
+            pass
+    elif extention == Extentions.XML:
+        pass
+    return tools
+
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
@@ -110,7 +124,10 @@ def main() -> None:
             case _:
                 print("Unknown extention. Skipping")
         
-
+        # Analysis
+        if (args.tools or args.all):
+            tools = tools_analysis(vex=vex, extention=extention, spesification=spesification, tools=tools)
+    pass
 
 if __name__ == "__main__":
     main()
