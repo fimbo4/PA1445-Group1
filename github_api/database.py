@@ -24,12 +24,12 @@ class vexDB:
         for item in collection.find():
             yield item
 
-    def get_all_documents(self) -> Generator[dict]:
+    def get_all_documents(self) -> Generator[(dict, str)]:
         filter = {"name": {"$regex": r"^(?!system\.)"}} # Ignores the system collections
         collections = self.db.list_collection_names(filter=filter)
         for collection in collections:
             for document in self.retrieve_collection_data(collection):
-                yield document
+                yield document, collection
 
     def count_documents(self) -> int:
         filter = {"name": {"$regex": r"^(?!system\.)"}} # Ignores the system collections
