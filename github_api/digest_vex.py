@@ -32,34 +32,23 @@ def tools_analysis(vex, extention: Extentions, spesification: str, buckets: dict
             buckets["CSAF"][vex["document"]["publisher"]["name"]] += 1
             buckets["CSAF"]["count"] += 1
         
-        elif (spesification == "CycloneDX"  and 
-              type(vex) == dict and
+        elif (spesification == "CycloneDX"  and
               "metadata" in vex.keys() and 
-              "tools" in vex["metadata"].keys() and
+              "tools" in vex["metadata"].keys() and # There has to be something in the tools
               len(vex["metadata"]["tools"]) != 0):
+            
+            # Handle different kind of tools
             if type(vex["metadata"]["tools"]) == dict:
-                # "services"
                 if "components" in vex["metadata"]["tools"].keys():
                     tools = vex["metadata"]["tools"]["components"]
                 elif "services" in vex["metadata"]["tools"]:
                     tools = vex["metadata"]["tools"]["services"]
             elif type(vex["metadata"]["tools"]) == list:
                 tools = vex["metadata"]["tools"]
+            
             for tool in tools:
-                if "externalReferences" in tool.keys():
-                    buckets["CycloneDX"][tool["name"]] += 1
-                elif "vendor" in tool.keys():
-                    buckets["CycloneDX"][tool["name"]] += 1
-                elif "type" in tool.keys() and tool["type"] == "application":
-                    buckets["CycloneDX"][tool["name"]] += 1
-                else:
-                    # Services
-                    # Providers
-                    # framework
-                    buckets["CycloneDX"][tool["name"]] += 1
-
+                buckets["CycloneDX"][tool["name"]] += 1
                 buckets["CycloneDX"]["count"] += 1
-            # tools["CycloneDX"][vex["metadata"]["tools"]["name"]] = tools.setdefault(vex["metadata"]["tools"]["name"], 0) + 1
         
         elif spesification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
