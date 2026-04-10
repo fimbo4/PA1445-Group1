@@ -132,6 +132,8 @@ def main() -> None:
     database = vexDB()
     document_count = database.count_documents()
     errors = []
+    non_VEX_count = 0
+    non_VEX = []
     for document, spesification in tqdm(database.get_all_documents(), desc="Analyzing documents", total=document_count, unit="documents"):
         match (document["extension"]):
             case "json" | "jsonld":
@@ -167,7 +169,10 @@ def main() -> None:
         
         # Skip schema documents
         if (document["filename"].count("schema") > 0 or
-            (type(vex) == dict and "$schema" in vex.keys())):
+            type(vex) == list or
+            (type(vex) == dict and (spesification != "CycloneDX" and spesification != "CSAF") and "$schema" in vex.keys())):
+            non_VEX_count += 1
+            non_VEX.append({"_id": document["_id"], "filename": document["filename"]})
             continue
 
         # Analysis
