@@ -1,12 +1,16 @@
-from database import vexDB
-from tqdm import tqdm
-import jsonc # Helps with parsing illegal Json
-from enum import Enum
-import xml.etree.ElementTree as ET
 import argparse
 import os
+# import xml.etree.ElementTree as ET
+from lxml import etree
 from collections import defaultdict
 from copy import deepcopy
+from enum import Enum
+from io import StringIO
+
+import jsonc  # Helps with parsing illegal Json
+from database import vexDB
+from tqdm import tqdm
+
 
 class Extentions(Enum):
     JSON = 1
