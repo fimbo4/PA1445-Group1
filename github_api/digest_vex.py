@@ -207,6 +207,17 @@ def main() -> None:
             non_VEX_count += 1
             non_VEX.append({"_id": document["_id"], "filename": document["filename"]})
             continue
+            # List of incorrectly skipped documents:
+            # Skipped because of the name:
+            # ObjectId('69c39d2cc28f54bef1261b17') - CycloneDX Confluence
+            # ObjectId('69c39db1c28f54bef1261bd4') - CycloneDX Confluence
+            # ObjectId('69c39e46c28f54bef1261c9c') - CycloneDX Confluence
+            # ObjectId('69c39e55c28f54bef1261cb4') - CycloneDX Confluence
+            # ObjectId('69c39fd1c28f54bef1261eb8') - CycloneDX Confluence
+            # ObjectId('69c3a075c28f54bef1261f85') - CycloneDX Confluence
+            # Skipped because it is a list:
+            # ObjectId('69c3a073c28f54bef1261f81') - The GitHub list
+
 
         # Analysis
         if args.tools or args.all:
