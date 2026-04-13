@@ -16,31 +16,49 @@ class Extentions(Enum):
     JSON = 1
     XML = 2
 
+
 # 3 gather vex spesific datapoints
 # 3.a Average vulnerabilities per file
-# 3.b Which Tools are used if any
 # 3.c Spesification version (On a per spesification basis)
 # 3.d databases
 # 3.e Vulnerability status
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
-def tools_analysis(vex, extention: Extentions, spesification: str, buckets: dict) -> dict:
+
+def tools_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    """
+    Extracts the name of the tools used to generate the vex
+    
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add another tool to
+
+    Returns
+    buckets
+    """
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "tooling" in vex.keys():
             buckets["OpenVEX"][vex["tooling"]] += 1
             buckets["OpenVEX"]["count"] += 1
-        
+
         elif spesification == "CSAF" and "document" in vex.keys():
-            # CSAF dosen't have a "tools" field, but a tool could be a publisher. 
+            # CSAF dosen't have a "tools" field, but a tool could be a publisher.
             buckets["CSAF"][vex["document"]["publisher"]["name"]] += 1
             buckets["CSAF"]["count"] += 1
-        
-        elif (spesification == "CycloneDX"  and
-              "metadata" in vex.keys() and 
-              "tools" in vex["metadata"].keys() and # There has to be something in the tools
-              len(vex["metadata"]["tools"]) != 0):
-            
+
+        elif (
+            spesification == "CycloneDX"
+            and "metadata" in vex.keys()
+            and "tools"
+            in vex["metadata"].keys()  # There has to be something in the tools
+            and len(vex["metadata"]["tools"]) != 0
+        ):
+
             # Handle different kind of tools
             if type(vex["metadata"]["tools"]) == dict:
                 if "components" in vex["metadata"]["tools"].keys():
@@ -49,11 +67,11 @@ def tools_analysis(vex, extention: Extentions, spesification: str, buckets: dict
                     tools = vex["metadata"]["tools"]["services"]
             elif type(vex["metadata"]["tools"]) == list:
                 tools = vex["metadata"]["tools"]
-            
+
             for tool in tools:
                 buckets["CycloneDX"][tool["name"]] += 1
                 buckets["CycloneDX"]["count"] += 1
-        
+
         elif spesification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
                 if entry["type"] == "CreationInfo" and "createdUsing" in entry.keys():
@@ -62,8 +80,17 @@ def tools_analysis(vex, extention: Extentions, spesification: str, buckets: dict
                         buckets["SPDX"]["count"] += 1
 
     elif extention == Extentions.XML:
-        pass
+        if spesification == "CycloneDX":
+            namespace = etree.QName(vex.tag).namespace
+            for metadata in vex.findall(etree.QName(namespace, "metadata")):
+                for tools in metadata.findall(etree.QName(namespace, "tools")): # component ? tools ?
+                    for tool in tools:
+                        for sub_element in tool:
+                            if etree.QName(sub_element.tag).localname == "name":
+                                buckets["CycloneDX"][sub_element.text] += 1
+                                buckets["CycloneDX"]["count"] += 1
     return buckets
+
 
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
