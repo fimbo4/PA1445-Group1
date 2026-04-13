@@ -276,7 +276,7 @@ def initial_search(search_terms: dict) -> tuple[dict[list], int]:
     for specification, searches in search_result.items():
         for search in searches:
             result_count += search["request"].json()["total_count"]
-    
+
     return search_result, result_count
 
 

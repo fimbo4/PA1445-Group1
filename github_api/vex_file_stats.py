@@ -1,7 +1,9 @@
-#import pandas as pd
+# import pandas as pd
 import json
-from database import vexDB
 from statistics import mean, median, mode
+
+from database import vexDB
+
 
 def repository_categorizer(db: vexDB, collection: str):
 
@@ -15,14 +17,15 @@ def repository_categorizer(db: vexDB, collection: str):
         repo = repo[1].split("/", 2)[0] + "/" + repo[1].split("/", 2)[1]
         repositories[repo] = repositories.setdefault(repo, 0) + 1
         num_files += 1
-    
+
     return repositories, num_files
+
 
 def openvex_analysis(db: vexDB):
     """
     mean mode median for openvex vulnerabilities
     """
-    
+
     failed_to_read = 0
     num_files = 0
     filetypes = {}
@@ -35,18 +38,18 @@ def openvex_analysis(db: vexDB):
         _, repo = commit_url.split("repos/")
         repo = repo.split("/", 2)[0] + "/" + repo.split("/", 2)[1]
         repositories[repo] = repositories.setdefault(repo, 0) + 1
-        #print(repo)
+        # print(repo)
         filetypes[file["extension"]] = filetypes.setdefault(file["extension"], 0) + 1
         num_files += 1
         try:
-            vex_contents = json.loads(file["file"])  
+            vex_contents = json.loads(file["file"])
         except:
             failed_to_read += 1
             continue
         statements.append(len(vex_contents["statements"]))
-        #pandas_json = pd.DataFrame(pd.json_normalize(vex_contents))
-        #flat_json = flatten(vex_contents)
-    
+        # pandas_json = pd.DataFrame(pd.json_normalize(vex_contents))
+        # flat_json = flatten(vex_contents)
+
     # print("Median statements: ", median(statements))
     # print("Mean statements: ", mean(statements))
     # print("Mode statements: ", mode(statements))
@@ -54,6 +57,7 @@ def openvex_analysis(db: vexDB):
     # print("Number of files: ", num_files)
     # print(filetypes)
     return repositories
+
 
 def cyclonedx_analysis(db: vexDB):
     failed_to_read = 0
@@ -65,13 +69,14 @@ def cyclonedx_analysis(db: vexDB):
         filetypes[file["extension"]] = filetypes.setdefault(file["extension"], 0) + 1
         num_files += 1
         try:
-            vex_contents = json.loads(file["file"])  #cdx needs to read xml too
+            vex_contents = json.loads(file["file"])  # cdx needs to read xml too
         except:
             failed_to_read += 1
             continue
     print("Failed to read: ", failed_to_read)
     print("Number of files: ", num_files)
     print(filetypes)
+
 
 def csaf_analysis(db: vexDB):
     failed_to_read = 0
@@ -83,13 +88,14 @@ def csaf_analysis(db: vexDB):
         filetypes[file["extension"]] = filetypes.setdefault(file["extension"], 0) + 1
         num_files += 1
         try:
-            vex_contents = json.loads(file["file"])  
+            vex_contents = json.loads(file["file"])
         except:
             failed_to_read += 1
             continue
     print("Failed to read: ", failed_to_read)
     print("Number of files: ", num_files)
     print(filetypes)
+
 
 def spdx_analysis(db: vexDB):
     failed_to_read = 0
@@ -101,7 +107,7 @@ def spdx_analysis(db: vexDB):
         filetypes[file["extension"]] = filetypes.setdefault(file["extension"], 0) + 1
         num_files += 1
         try:
-            vex_contents = json.loads(file["file"])  
+            vex_contents = json.loads(file["file"])
         except:
             failed_to_read += 1
             continue
@@ -109,12 +115,14 @@ def spdx_analysis(db: vexDB):
     print("Number of files: ", num_files)
     print(filetypes)
 
+
 def main():
     db = vexDB()
     openvex_analysis(db)
     csaf_analysis(db)
     spdx_analysis(db)
     cyclonedx_analysis(db)
+
 
 if __name__ == "__main__":
     main()

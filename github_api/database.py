@@ -1,5 +1,7 @@
-from pymongo import MongoClient
 from typing import Generator
+
+from pymongo import MongoClient
+
 
 class vexDB:
     def __init__(self):
@@ -25,14 +27,18 @@ class vexDB:
             yield item
 
     def get_all_documents(self) -> Generator[(dict, str)]:
-        filter = {"name": {"$regex": r"^(?!system\.)"}} # Ignores the system collections
+        filter = {
+            "name": {"$regex": r"^(?!system\.)"}
+        }  # Ignores the system collections
         collections = self.db.list_collection_names(filter=filter)
         for collection in collections:
             for document in self.retrieve_collection_data(collection):
                 yield document, collection
 
     def count_documents(self) -> int:
-        filter = {"name": {"$regex": r"^(?!system\.)"}} # Ignores the system collections
+        filter = {
+            "name": {"$regex": r"^(?!system\.)"}
+        }  # Ignores the system collections
         collections = self.db.list_collection_names(filter=filter)
         count = 0
         for collection in collections:
