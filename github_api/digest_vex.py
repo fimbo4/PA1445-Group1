@@ -43,13 +43,13 @@ def tools_analysis(
     """
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "tooling" in vex.keys():
-            buckets["OpenVEX"][vex["tooling"]] += 1
-            buckets["OpenVEX"]["count"] += 1
+            buckets[spesification][vex["tooling"]] += 1
+            buckets[spesification]["count"] += 1
 
         elif spesification == "CSAF" and "document" in vex.keys():
             # CSAF dosen't have a "tools" field, but a tool could be a publisher.
-            buckets["CSAF"][vex["document"]["publisher"]["name"]] += 1
-            buckets["CSAF"]["count"] += 1
+            buckets[spesification][vex["document"]["publisher"]["name"]] += 1
+            buckets[spesification]["count"] += 1
 
         elif (
             spesification == "CycloneDX"
@@ -69,8 +69,8 @@ def tools_analysis(
                 tools = vex["metadata"]["tools"]
 
             for tool in tools:
-                buckets["CycloneDX"][tool["name"]] += 1
-                buckets["CycloneDX"]["count"] += 1
+                buckets[spesification][tool["name"]] += 1
+                buckets[spesification]["count"] += 1
 
         elif spesification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
@@ -87,8 +87,8 @@ def tools_analysis(
                     for tool in tools:
                         for sub_element in tool:
                             if etree.QName(sub_element.tag).localname == "name":
-                                buckets["CycloneDX"][sub_element.text] += 1
-                                buckets["CycloneDX"]["count"] += 1
+                                buckets[spesification][sub_element.text] += 1
+                                buckets[spesification]["count"] += 1
     return buckets
 
 
