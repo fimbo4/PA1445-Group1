@@ -92,7 +92,6 @@ def tools_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
-
 def spesification_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
@@ -130,6 +129,82 @@ def spesification_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+def database_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    # Someone is adding junk data, could be several someones
+    found_vulnerability_database = False
+    if extention == Extentions.JSON:
+        if spesification == "OpenVEX" and "statements" in vex.keys():
+            for statement in vex["statements"]:
+                if type(statement) != dict:
+                    continue
+                if ("vulnerability" in statement.keys() 
+                    and type(statement["vulnerability"]) == dict
+                    and "name" in statement["vulnerability"].keys()):
+                    buckets[strip_vulnarability_to_database(statement["vulnerability"]["name"])] += 1
+                    found_vulnerability_database = True
+                    if "aliases" in statement["vulnerability"].keys():
+                        for alias in statement["vulnerability"]["aliases"]:
+                            buckets[strip_vulnarability_to_database(alias)] += 1
+
+        elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if "cve" in vulnerability.keys():
+                    buckets[strip_vulnarability_to_database(vulnerability["cve"])] += 1
+                    found_vulnerability_database = True
+                if "ids" in vulnerability.keys():
+                    for id in vulnerability["ids"]:
+                        if type(id) != str:
+                            continue
+                        buckets[strip_vulnarability_to_database(id)] += 1
+                        found_vulnerability_database = True
+
+        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if (type(vulnerability) == dict
+                    and "id" in vulnerability.keys()):
+                    buckets[strip_vulnarability_to_database(vulnerability["id"])] += 1
+                    found_vulnerability_database = True
+
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            for entry in vex["@graph"]:
+                if entry["type"] == "Vulnerability" and "externalIdentifier" in entry.keys():
+                    for external_identifier in entry["externalIdentifier"]:
+                        if external_identifier["type"] == "ExternalIdentifier" and (external_identifier["externalIdentifierType"] == "cve" or external_identifier["externalIdentifierType"] == "securityOther"):
+                            buckets[strip_vulnarability_to_database(external_identifier["identifier"])] += 1
+                            found_vulnerability_database = True
+
+    elif extention == Extentions.XML:
+        # _id: {"$oid": "69c3a09dc28f54bef1261fb6"}
+        if spesification == "CycloneDX":
+            namespace = etree.QName(vex.tag).namespace
+            # namespaces = {key: vex.nsmap[key] for key in set(list(vex.nsmap.keys())) - set([None])}
+            namespaces_keys = list(vex.nsmap.keys())
+            for key in namespaces_keys:
+                for vulnerabilities in vex.findall(f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap):
+                    for vulnerability in vulnerabilities.findall(f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap):
+                        for id in vulnerability.findall(f"{f"{key}:" if key else ""}id", namespaces=vex.nsmap):
+                            buckets[strip_vulnarability_to_database(id.text)] += 1
+                            found_vulnerability_database = True
+            # for vulnerabilities in vex.findall(etree.QName(namespace, "vulnerabilities")):
+            # for vulnerabilities in vex.xpath("vulnerabilities", namespaces=namespaces):
+                # for vulnerability in vulnerabilities:
+                #     for tool in vulnerability:
+                #         for sub_element in tool:
+                #             if etree.QName(sub_element.tag).localname == "name":
+                #                 buckets[spesification][sub_element.text] += 1
+                #                 found_tool = True
+
+    if found_vulnerability_database:
+        buckets["count"] += 1
+    return buckets
+
+def strip_vulnarability_to_database(vulnerability: str) -> str:
+    if vulnerability == None:
+        return "NULL"
+    split = vulnerability.split("-")
+    return split[0]
 
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
@@ -153,7 +228,8 @@ def input_arguments() -> argparse.Namespace:
         help="Analyses the different versions of the spesifications",
     )
     parser.add_argument(
-        "-db" "--databases",
+        "-db",
+        "--databases",
         action="store_true",
         help="Analyses the different databases used",
     )
@@ -177,7 +253,6 @@ def input_arguments() -> argparse.Namespace:
     args = parser.parse_args()
     return args
 
-
 def main() -> None:
     args = input_arguments()
     empty_dict = defaultdict(int)
@@ -188,6 +263,7 @@ def main() -> None:
         "SPDX": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
+    databases = deepcopy(empty_dict)
 
     database = vexDB()
     document_count = database.count_documents()
@@ -267,6 +343,13 @@ def main() -> None:
                 extention=extention,
                 spesification=spesification,
                 buckets=versions,
+            )
+        if args.databases or args.all:
+            databases = database_analysis(
+                vex=vex, 
+                extention=extention, 
+                spesification= spesification,
+                buckets=databases,
             )
     pass
 
