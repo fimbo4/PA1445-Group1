@@ -41,15 +41,16 @@ def tools_analysis(
     Returns
     buckets
     """
+    found_tool = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "tooling" in vex.keys():
             buckets[spesification][vex["tooling"]] += 1
-            buckets[spesification]["count"] += 1
+            found_tool = True
 
         elif spesification == "CSAF" and "document" in vex.keys():
             # CSAF dosen't have a "tools" field, but a tool could be a publisher.
             buckets[spesification][vex["document"]["publisher"]["name"]] += 1
-            buckets[spesification]["count"] += 1
+            found_tool = True
 
         elif (
             spesification == "CycloneDX"
@@ -70,14 +71,28 @@ def tools_analysis(
 
             for tool in tools:
                 buckets[spesification][tool["name"]] += 1
-                buckets[spesification]["count"] += 1
+                found_tool = True
 
         elif spesification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
                 if entry["type"] == "CreationInfo" and "createdUsing" in entry.keys():
                     for tool in entry["createdUsing"]:
-                        buckets["SPDX"][tool] += 1
-                        buckets["SPDX"]["count"] += 1
+                        buckets[spesification][tool] += 1
+                        found_tool = True
+
+    elif extention == Extentions.XML:
+        if spesification == "CycloneDX":
+            namespace = etree.QName(vex.tag).namespace
+            for metadata in vex.findall(etree.QName(namespace, "metadata")):
+                for tools in metadata.findall(etree.QName(namespace, "tools")):
+                    for tool in tools:
+                        for sub_element in tool:
+                            if etree.QName(sub_element.tag).localname == "name":
+                                buckets[spesification][sub_element.text] += 1
+                                found_tool = True
+    if found_tool:
+        buckets[spesification]["count"] += 1
+    return buckets
 
     elif extention == Extentions.XML:
         if spesification == "CycloneDX":
