@@ -18,7 +18,6 @@ class Extentions(Enum):
 
 # 3 gather vex spesific datapoints
 # 3.a Average vulnerabilities per file
-# 3.c Spesification version (On a per spesification basis)
 # 3.d databases
 # 3.e Vulnerability status
 # 3.f Vulnerability severity (Buckets?)
@@ -100,7 +99,9 @@ def spesification_analysis(
     found_spesification = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "@context" in vex.keys():
-            buckets[spesification][vex["@context"]] += 1
+            context = vex["@context"]
+            version = context.replace("https://openvex.dev/ns/v", "")
+            buckets[spesification][version] += 1
             found_spesification = True
 
         elif spesification == "CSAF" and "document" in vex.keys():
