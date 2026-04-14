@@ -7,7 +7,6 @@ from io import StringIO
 
 import jsonc  # Helps with parsing illegal Json
 from database import vexDB
-# import xml.etree.ElementTree as ET
 from lxml import etree
 from tqdm import tqdm
 
@@ -94,18 +93,40 @@ def tools_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+
+def spesification_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    found_spesification = False
+    if extention == Extentions.JSON:
+        if spesification == "OpenVEX" and "@context" in vex.keys():
+            buckets[spesification][vex["@context"]] += 1
+            found_spesification = True
+
+        elif spesification == "CSAF" and "document" in vex.keys():
+            buckets[spesification][vex["document"]["csaf_version"]] += 1
+            found_spesification = True
+
+        elif spesification == "CycloneDX" and "specVersion" in vex.keys():
+
+            buckets[spesification][vex["specVersion"]] += 1
+            found_spesification = True
+
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            for entry in vex["@graph"]:
+                if entry["type"] == "CreationInfo" and "specVersion" in entry.keys():
+                    buckets[spesification][entry["specVersion"]] += 1
+                    found_spesification = True
+
     elif extention == Extentions.XML:
         if spesification == "CycloneDX":
             namespace = etree.QName(vex.tag).namespace
-            for metadata in vex.findall(etree.QName(namespace, "metadata")):
-                for tools in metadata.findall(
-                    etree.QName(namespace, "tools")
-                ):  # component ? tools ?
-                    for tool in tools:
-                        for sub_element in tool:
-                            if etree.QName(sub_element.tag).localname == "name":
-                                buckets[spesification][sub_element.text] += 1
-                                buckets[spesification]["count"] += 1
+            version = namespace.replace("http://cyclonedx.org/schema/bom/", "")
+            buckets[spesification][version] += 1
+            found_spesification = True
+
+    if found_spesification:
+        buckets[spesification]["count"] += 1
     return buckets
 
 
@@ -126,7 +147,7 @@ def input_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "-v",
-        "--verions",
+        "--version",
         action="store_true",
         help="Analyses the different versions of the spesifications",
     )
@@ -165,6 +186,7 @@ def main() -> None:
         "CycloneDX": deepcopy(empty_dict),
         "SPDX": deepcopy(empty_dict),
     }
+    versions = deepcopy(tools)
 
     database = vexDB()
     document_count = database.count_documents()
@@ -233,11 +255,17 @@ def main() -> None:
             # Skipped because it is a list:
             # ObjectId('69c3a073c28f54bef1261f81') - The GitHub list
 
-
         # Analysis
         if args.tools or args.all:
             tools = tools_analysis(
                 vex=vex, extention=extention, spesification=spesification, buckets=tools
+            )
+        if args.version or args.all:
+            versions = spesification_analysis(
+                vex=vex,
+                extention=extention,
+                spesification=spesification,
+                buckets=versions,
             )
     pass
 
