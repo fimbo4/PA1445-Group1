@@ -241,16 +241,11 @@ def strip_vulnarability_to_database(input: str) -> str:
 
 def link_sanitation(vulnerability: str) -> str:
     """Removes the link from the vulnerablility"""
-    # first_dash = vulnerability.rfind("-")
     seperators = ["/", ",", "=", "?", ":", ]
     counter = 0
     for char in reversed(vulnerability):
         if char in seperators:
             break
-        # elif char == "-":
-        #     counter += 1
-        #     first_dash = first_dash - counter
-        #     counter = 0
         else:
             counter += 1
     
