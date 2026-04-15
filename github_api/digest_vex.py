@@ -200,11 +200,65 @@ def database_analysis(
         buckets["count"] += 1
     return buckets
 
-def strip_vulnarability_to_database(vulnerability: str) -> str:
-    if vulnerability == None:
+def strip_vulnarability_to_database(input: str) -> str:
+    # None
+    # CVE-1234-1234
+    # https://somelink/CVE-1234-1234
+    if input == None or input.lower() == "none":
         return "NULL"
-    split = vulnerability.split("-")
-    return split[0]
+    
+    first_dash = input.rfind("-")
+    if first_dash == -1:
+        return "INVALID"
+    
+    if input.startswith("http"):
+        vulnerability = link_sanitation(input)
+    else:
+        vulnerability = input
+
+    if vulnerability.find(":") != -1:
+        # SUSE-SU-2025:10234-1
+        first_half = vulnerability.split(":")[0]
+        database = first_half[:first_half.rfind("-")]
+    else:
+        # CVE-1978-2356
+        # GHSA-j223-234f-32f3
+        # dsa-234567
+        identifier_regex = f"[{ALPH}]{{2,7}}"
+        # min_one_number = f"[{ALPH}]|[{NUM}]({ALPH}{NUM})"
+        min_one_number = f"(-(?=[{ALPH}]*[{NUM}])"
+        # segment_regex = f"(-[{ALPH}{NUM}]{{2,15}}){{1,3}}"
+        segment_regex = f"({min_one_number}([{ALPH}{NUM}]){{2,15}}){{1,3}})"
+        
+        # no
+        # stable
+        # ocert
+        database_regex = f"{identifier_regex}{segment_regex}"
+        
+        result = re.match(pattern=database_regex, string=vulnerability)
+
+        # Debug regex
+        dash = vulnerability.find("-")
+        first_half = vulnerability[:dash]
+        second_half = vulnerability[dash:]
+        # (-(([a-zA-Z]*[0-9])|([0-9]))(a-zA-Z0-9){2,15}){1,3}
+        # (-(?=\D*\d)(a-zA-Z0-9){2,15}){1,3}
+        ident = re.match(pattern=identifier_regex, string=first_half)
+        segs = re.match(pattern=segment_regex, string=second_half)
+        # Debig regex
+
+        if not result:
+            return "NOT_DATABASE"
+        else:
+            dash = vulnerability.find("-")
+            first_half = vulnerability[:dash]
+            second_half = vulnerability[dash:]
+            
+            ident = re.match(pattern=identifier_regex, string=first_half)
+            segs = re.match(pattern=segment_regex, string=second_half)
+            database = ident.group(0)
+
+    return database
 
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
