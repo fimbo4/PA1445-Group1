@@ -260,6 +260,24 @@ def strip_vulnarability_to_database(input: str) -> str:
 
     return database
 
+def link_sanitation(vulnerability: str) -> str:
+    """Removes the link from the vulnerablility"""
+    # first_dash = vulnerability.rfind("-")
+    seperators = ["/", ",", "=", "?", ":", ]
+    counter = 0
+    for char in reversed(vulnerability):
+        if char in seperators:
+            break
+        # elif char == "-":
+        #     counter += 1
+        #     first_dash = first_dash - counter
+        #     counter = 0
+        else:
+            counter += 1
+    
+    start_index = len(vulnerability) - counter
+    return vulnerability[start_index:]
+
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
