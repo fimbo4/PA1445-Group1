@@ -135,7 +135,7 @@ def spesification_analysis(
 def database_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
-    # Someone is adding junk data, could be several someones
+    
     found_vulnerability_database = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "statements" in vex.keys():
@@ -179,10 +179,7 @@ def database_analysis(
                             found_vulnerability_database = True
 
     elif extention == Extentions.XML:
-        # _id: {"$oid": "69c3a09dc28f54bef1261fb6"}
         if spesification == "CycloneDX":
-            namespace = etree.QName(vex.tag).namespace
-            # namespaces = {key: vex.nsmap[key] for key in set(list(vex.nsmap.keys())) - set([None])}
             namespaces_keys = list(vex.nsmap.keys())
             for key in namespaces_keys:
                 for vulnerabilities in vex.findall(f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap):
@@ -190,14 +187,6 @@ def database_analysis(
                         for id in vulnerability.findall(f"{f"{key}:" if key else ""}id", namespaces=vex.nsmap):
                             buckets[strip_vulnarability_to_database(id.text)] += 1
                             found_vulnerability_database = True
-            # for vulnerabilities in vex.findall(etree.QName(namespace, "vulnerabilities")):
-            # for vulnerabilities in vex.xpath("vulnerabilities", namespaces=namespaces):
-                # for vulnerability in vulnerabilities:
-                #     for tool in vulnerability:
-                #         for sub_element in tool:
-                #             if etree.QName(sub_element.tag).localname == "name":
-                #                 buckets[spesification][sub_element.text] += 1
-                #                 found_tool = True
 
     if found_vulnerability_database:
         buckets["count"] += 1
