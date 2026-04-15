@@ -10,8 +10,11 @@ from database import vexDB
 from lxml import etree
 from tqdm import tqdm
 from statistics import mean, median, mode
+import re
 
 
+ALPH = "a-zA-Z"
+NUM = "0-9"
 class Extentions(Enum):
     JSON = 1
     XML = 2
@@ -19,7 +22,6 @@ class Extentions(Enum):
 
 # 3 gather vex spesific datapoints
 # 3.a Average vulnerabilities per file
-# 3.c Spesification version (On a per spesification basis)
 # 3.d databases
 # 3.e Vulnerability status
 # 3.f Vulnerability severity (Buckets?)
@@ -94,14 +96,27 @@ def tools_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
-
 def spesification_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
+    """
+    Extracts the version number of the spesification
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add another version number to
+
+    Returns
+    buckets
+    """
     found_spesification = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "@context" in vex.keys():
-            buckets[spesification][vex["@context"]] += 1
+            context = vex["@context"]
+            version = context.replace("https://openvex.dev/ns/v", "")
+            buckets[spesification][version] += 1
             found_spesification = True
 
         elif spesification == "CSAF" and "document" in vex.keys():
@@ -130,6 +145,125 @@ def spesification_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+def database_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    """
+    Extracts the name of the databases the vulnerabilites come from
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add the databases to
+
+    Returns
+    buckets
+    """
+    found_vulnerability_database = False
+    if extention == Extentions.JSON:
+        if spesification == "OpenVEX" and "statements" in vex.keys():
+            for statement in vex["statements"]:
+                if type(statement) != dict:
+                    continue
+                if ("vulnerability" in statement.keys() 
+                    and type(statement["vulnerability"]) == dict
+                    and "name" in statement["vulnerability"].keys()):
+                    buckets[strip_vulnarability_to_database(statement["vulnerability"]["name"])] += 1
+                    found_vulnerability_database = True
+                    if "aliases" in statement["vulnerability"].keys():
+                        for alias in statement["vulnerability"]["aliases"]:
+                            buckets[strip_vulnarability_to_database(alias)] += 1
+
+        elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if "cve" in vulnerability.keys():
+                    buckets[strip_vulnarability_to_database(vulnerability["cve"])] += 1
+                    found_vulnerability_database = True
+                if "ids" in vulnerability.keys():
+                    for id in vulnerability["ids"]:
+                        if type(id) != str:
+                            continue
+                        buckets[strip_vulnarability_to_database(id)] += 1
+                        found_vulnerability_database = True
+
+        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if (type(vulnerability) == dict
+                    and "id" in vulnerability.keys()):
+                    buckets[strip_vulnarability_to_database(vulnerability["id"])] += 1
+                    found_vulnerability_database = True
+
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            for entry in vex["@graph"]:
+                if entry["type"] == "Vulnerability" and "externalIdentifier" in entry.keys():
+                    for external_identifier in entry["externalIdentifier"]:
+                        if external_identifier["type"] == "ExternalIdentifier" and (external_identifier["externalIdentifierType"] == "cve" or external_identifier["externalIdentifierType"] == "securityOther"):
+                            buckets[strip_vulnarability_to_database(external_identifier["identifier"])] += 1
+                            found_vulnerability_database = True
+
+    elif extention == Extentions.XML:
+        if spesification == "CycloneDX":
+            namespaces_keys = list(vex.nsmap.keys())
+            for key in namespaces_keys:
+                for vulnerabilities in vex.findall(f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap):
+                    for vulnerability in vulnerabilities.findall(f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap):
+                        for id in vulnerability.findall(f"{f"{key}:" if key else ""}id", namespaces=vex.nsmap):
+                            buckets[strip_vulnarability_to_database(id.text)] += 1
+                            found_vulnerability_database = True
+
+    if found_vulnerability_database:
+        buckets["count"] += 1
+    return buckets
+
+def strip_vulnarability_to_database(input: str) -> str:
+    """Tries to extract the datbase from the input"""
+    if input == None or input.lower() == "none":
+        return "NULL"
+    
+    first_dash = input.rfind("-")
+    if first_dash == -1:
+        return "INVALID"
+    
+    if input.startswith("http"):
+        vulnerability = link_sanitation(input)
+    else:
+        vulnerability = input
+
+    if vulnerability.find(":") != -1:
+        first_half = vulnerability.split(":")[0]
+        database = first_half[:first_half.rfind("-")]
+    else:
+        identifier_regex = f"[{ALPH}]{{2,7}}"
+        min_one_number = f"(-(?=[{ALPH}]*[{NUM}])"
+        segment_regex = f"({min_one_number}([{ALPH}{NUM}]){{2,15}}){{1,3}})"
+        database_regex = f"{identifier_regex}{segment_regex}"
+        # [a-zA-Z]{2,7}((-(?=[a-zA-Z]*[0-9])([a-zA-Z0-9]){2,15}){1,3})
+        
+        result = re.match(pattern=database_regex, string=vulnerability)
+        if not result:
+            return "NOT_DATABASE"
+        else:
+            dash = vulnerability.find("-")
+            first_half = vulnerability[:dash]
+            
+            ident = re.match(pattern=identifier_regex, string=first_half)
+            database = ident.group(0)
+
+    return database
+
+def link_sanitation(vulnerability: str) -> str:
+    """Removes the link from the vulnerablility"""
+    seperators = ["/", ",", "=", "?", ":", ]
+    counter = 0
+    for char in reversed(vulnerability):
+        if char in seperators:
+            break
+        else:
+            counter += 1
+    
+    start_index = len(vulnerability) - counter
+    return vulnerability[start_index:]
 
 def vulnerabilities_analysis(vex, extension: Extentions, specification: str, vulnerabilities: dict, lacks_vulnerabilities: dict) -> None:
     
@@ -197,7 +331,8 @@ def input_arguments() -> argparse.Namespace:
         help="Analyses the different versions of the spesifications",
     )
     parser.add_argument(
-        "-db" "--databases",
+        "-db",
+        "--databases",
         action="store_true",
         help="Analyses the different databases used",
     )
@@ -227,7 +362,6 @@ def input_arguments() -> argparse.Namespace:
     args = parser.parse_args()
     return args
 
-
 def main() -> None:
     args = input_arguments()
     empty_dict = defaultdict(int)
@@ -250,6 +384,7 @@ def main() -> None:
         "CycloneDX": 0,
         "SPDX": 0
     }
+    databases = deepcopy(empty_dict)
 
     database = vexDB()
     document_count = database.count_documents()
@@ -338,6 +473,13 @@ def main() -> None:
         v_mode = mode(vulnerabilities[key])
         v_mean = mean(vulnerabilities[key])
 
+        if args.databases or args.all:
+            databases = database_analysis(
+                vex=vex, 
+                extention=extention, 
+                spesification= spesification,
+                buckets=databases,
+            )
     pass
 
 
