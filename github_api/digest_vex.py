@@ -468,11 +468,6 @@ def main() -> None:
         if args.vulnerabilities or args.all:
             vulnerabilities_analysis(vex=vex, extension=extention, specification=spesification, vulnerabilities=vulnerabilities, lacks_vulnerabilities=lacks_vulnerabilities)
 
-    for key in vulnerabilities.keys():
-        v_median = median(vulnerabilities[key])
-        v_mode = mode(vulnerabilities[key])
-        v_mean = mean(vulnerabilities[key])
-
         if args.databases or args.all:
             databases = database_analysis(
                 vex=vex, 
@@ -480,6 +475,13 @@ def main() -> None:
                 spesification= spesification,
                 buckets=databases,
             )
+
+    if args.vulnerabilities or args.all:
+        for key in vulnerabilities.keys():
+            v_median = median(vulnerabilities[key])
+            v_mode = mode(vulnerabilities[key])
+            v_mean = mean(vulnerabilities[key])
+            
     pass
 
 
