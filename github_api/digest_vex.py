@@ -9,6 +9,7 @@ import jsonc  # Helps with parsing illegal Json
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
+from statistics import mean, median, mode
 
 
 class Extentions(Enum):
@@ -130,6 +131,50 @@ def spesification_analysis(
     return buckets
 
 
+def vulnerabilities_analysis(vex, extension: Extentions, specification: str, vulnerabilities: dict, lacks_vulnerabilities: dict) -> None:
+    
+    if specification == "OpenVEX":
+        if "statements" in vex.keys():
+            vulnerabilities["OpenVEX"].append(len(vex["statements"]))
+            if len(vex["statements"]) == 0:
+                lacks_vulnerabilities["OpenVEX"] += 1
+        else:
+            lacks_vulnerabilities["OpenVEX"] += 1
+
+    elif specification == "CSAF":
+        if "vulnerabilities" in vex.keys():
+            vulnerabilities["CSAF"].append(len(vex["vulnerabilities"]))
+            if len(vex["vulnerabilities"]) == 0:
+                lacks_vulnerabilities["CSAF"] += 1
+        else:
+            lacks_vulnerabilities["CSAF"] += 1
+
+    elif specification == "CycloneDX":
+        if extension == Extentions.JSON:
+            if "vulnerabilities" in vex.keys():
+                vulnerabilities["CycloneDX"].append(len(vex["vulnerabilities"]))
+                if len(vex["vulnerabilities"]) == 0:
+                    lacks_vulnerabilities["CycloneDX"] += 1
+            else:
+                lacks_vulnerabilities["CycloneDX"] += 1
+        elif extension == Extentions.XML:
+            namespace = etree.QName(vex.tag).namespace
+            for vulns in vex.findall(etree.QName(namespace, "vulnerabilities")):
+                vulnerabilities["CycloneDX"].append(len(vulns))
+                if len(vulns) == 0:
+                    lacks_vulnerabilities["CycloneDX"] += 1
+                break
+
+    elif specification == "SPDX" and "@graph" in vex.keys():
+        vuln_count = 0
+        for element in vex["@graph"]:
+            if element["type"] == "security_Vulnerability" or element["type"] == "Vulnerability":
+                vuln_count += 1
+        vulnerabilities["SPDX"].append(vuln_count)
+        if vuln_count == 0:
+            lacks_vulnerabilities["SPDX"] += 1
+
+
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
@@ -172,6 +217,12 @@ def input_arguments() -> argparse.Namespace:
         action="store_true",
         help="Creats plots for any analyses performed. Stored in the /plots folder",
     )
+    parser.add_argument(
+        "-vuln",
+        "--vulnerabilities",
+        action="store_true",
+        help="Analyses the mean mode and median for the number of vulnerabilities"
+    )
 
     args = parser.parse_args()
     return args
@@ -187,6 +238,18 @@ def main() -> None:
         "SPDX": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
+    vulnerabilities = {
+        "OpenVEX": [],
+        "CSAF": [],
+        "CycloneDX": [],
+        "SPDX": []
+    }
+    lacks_vulnerabilities = {
+        "OpenVEX": 0,
+        "CSAF": 0,
+        "CycloneDX": 0,
+        "SPDX": 0
+    }
 
     database = vexDB()
     document_count = database.count_documents()
@@ -267,6 +330,14 @@ def main() -> None:
                 spesification=spesification,
                 buckets=versions,
             )
+        if args.vulnerabilities or args.all:
+            vulnerabilities_analysis(vex=vex, extension=extention, specification=spesification, vulnerabilities=vulnerabilities, lacks_vulnerabilities=lacks_vulnerabilities)
+
+    for key in vulnerabilities.keys():
+        v_median = median(vulnerabilities[key])
+        v_mode = mode(vulnerabilities[key])
+        v_mean = mean(vulnerabilities[key])
+
     pass
 
 
