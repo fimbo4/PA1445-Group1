@@ -98,6 +98,18 @@ def tools_analysis(
 def spesification_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
+    """
+    Extracts the version number of the spesification
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add another version number to
+
+    Returns
+    buckets
+    """
     found_spesification = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "@context" in vex.keys():
@@ -135,7 +147,18 @@ def spesification_analysis(
 def database_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
-    
+    """
+    Extracts the name of the databases the vulnerabilites come from
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add the databases to
+
+    Returns
+    buckets
+    """
     found_vulnerability_database = False
     if extention == Extentions.JSON:
         if spesification == "OpenVEX" and "statements" in vex.keys():
