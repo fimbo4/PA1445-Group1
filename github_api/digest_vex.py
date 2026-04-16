@@ -481,7 +481,9 @@ def main() -> None:
             v_median = median(vulnerabilities[key])
             v_mode = mode(vulnerabilities[key])
             v_mean = mean(vulnerabilities[key])
-            
+            v_median_non_zero = median([val  for val in vulnerabilities[key] if val != 0])
+            v_mode_non_zero = mode([val  for val in vulnerabilities[key] if val != 0])
+            v_mean_non_zero = mean([val  for val in vulnerabilities[key] if val != 0])
     pass
 
 
