@@ -616,6 +616,7 @@ def status_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+
 def ratings_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
@@ -658,10 +659,7 @@ def ratings_analysis(
 
         elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
-                if (
-                    type(vulnerability) == dict
-                    and "ratings" in vulnerability.keys()
-                ):
+                if type(vulnerability) == dict and "ratings" in vulnerability.keys():
                     for item in vulnerability["ratings"]:
                         if "method" in item.keys():
                             match item["method"]:
@@ -680,12 +678,16 @@ def ratings_analysis(
                                         buckets[spesification]["ratings"].append(score)
                                     break
                                 case "other":
-                                    if ("score" in item.keys()
-                                        and "source" in item.keys()):
+                                    if (
+                                        "score" in item.keys()
+                                        and "source" in item.keys()
+                                    ):
                                         found_rating = True
                                         score = item["score"]
                                         name = item["source"]["name"]
-                                        buckets[spesification]["other"].append({"score": score, "name": name})
+                                        buckets[spesification]["other"].append(
+                                            {"score": score, "name": name}
+                                        )
                                         buckets[spesification]["ratings"].append(score)
                                     break
                                 # While supported none were found in the dataset
@@ -717,15 +719,21 @@ def ratings_analysis(
                     match entry["relationshipType"]:
                         case "CvssV2VulnAssessmentRelationship":
                             buckets[spesification]["CVSS"]["2"] += 1
-                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            buckets[spesification]["ratings"].append(
+                                float(entry["security_score"])
+                            )
                             break
                         case "CvssV3VulnAssessmentRelationship":
                             buckets[spesification]["CVSS"]["3"] += 1
-                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            buckets[spesification]["ratings"].append(
+                                float(entry["security_score"])
+                            )
                             break
                         case "CvssV4VulnAssessmentRelationship":
                             buckets[spesification]["CVSS"]["4"] += 1
-                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            buckets[spesification]["ratings"].append(
+                                float(entry["security_score"])
+                            )
                             break
 
     elif extention == Extentions.XML:
@@ -745,8 +753,14 @@ def ratings_analysis(
                                 f"{f"{key}:" if key else ""}rating",
                                 namespaces=vex.nsmap,
                             ):
-                                score_str = rating.find(f"{f"{key}:" if key else ""}score", namespaces=vex.nsmap)
-                                method = rating.find(f"{f"{key}:" if key else ""}method", namespaces=vex.nsmap)
+                                score_str = rating.find(
+                                    f"{f"{key}:" if key else ""}score",
+                                    namespaces=vex.nsmap,
+                                )
+                                method = rating.find(
+                                    f"{f"{key}:" if key else ""}method",
+                                    namespaces=vex.nsmap,
+                                )
 
                                 try:
                                     score = float(score_str.text)
@@ -757,29 +771,48 @@ def ratings_analysis(
                                         case "CVSSv2":
                                             found_rating = True
                                             buckets[spesification]["CVSS"]["2"] += 1
-                                            buckets[spesification]["ratings"].append(score)
+                                            buckets[spesification]["ratings"].append(
+                                                score
+                                            )
                                             break
                                         case "CVSSv3" | "CVSSv31":
                                             found_rating = True
                                             buckets[spesification]["CVSS"]["3"] += 1
-                                            buckets[spesification]["ratings"].append(score)
+                                            buckets[spesification]["ratings"].append(
+                                                score
+                                            )
                                             break
                                         case "other":
-                                            source = rating.find(f"{f"{key}:" if key else ""}source", namespaces=vex.nsmap)
+                                            source = rating.find(
+                                                f"{f"{key}:" if key else ""}source",
+                                                namespaces=vex.nsmap,
+                                            )
                                             if source is None:
                                                 continue
-                                            name_element = source.find(f"{f"{key}:" if key else ""}name", namespaces=vex.nsmap)
+                                            name_element = source.find(
+                                                f"{f"{key}:" if key else ""}name",
+                                                namespaces=vex.nsmap,
+                                            )
                                             if name_element is None:
                                                 continue
                                             found_rating = True
-                                            name = source.find(f"{f"{key}:" if key else ""}name", namespaces=vex.nsmap).text
-                                            buckets[spesification]["other"].append({"score": score, "name": name})
-                                            buckets[spesification]["ratings"].append(score)
+                                            name = source.find(
+                                                f"{f"{key}:" if key else ""}name",
+                                                namespaces=vex.nsmap,
+                                            ).text
+                                            buckets[spesification]["other"].append(
+                                                {"score": score, "name": name}
+                                            )
+                                            buckets[spesification]["ratings"].append(
+                                                score
+                                            )
                                             break
                                         case "CVSSv4":
                                             found_rating = True
                                             buckets[spesification]["CVSS"]["4"] += 1
-                                            buckets[spesification]["ratings"].append(score)
+                                            buckets[spesification]["ratings"].append(
+                                                score
+                                            )
                                             break
                                         # While supported none were found in the dataset
                                         # so the code has been left incomplete
@@ -883,16 +916,12 @@ def main() -> None:
     databases = deepcopy(empty_dict)
     statuses = deepcopy(tools)
     suported_ratings = {
-            "CVSS": {
-                "2": 0,
-                "3": 0,
-                "4": 0
-            },
-            "OWASP": 0,
-            "other": [],
-            "ratings": [],
-            "count" : 0
-        }
+        "CVSS": {"2": 0, "3": 0, "4": 0},
+        "OWASP": 0,
+        "other": [],
+        "ratings": [],
+        "count": 0,
+    }
     ratings = {
         "OpenVEX": deepcopy(suported_ratings),
         "CSAF": deepcopy(suported_ratings),
@@ -1009,14 +1038,12 @@ def main() -> None:
                 vex=vex,
                 extention=extention,
                 spesification=spesification,
-                buckets=ratings
+                buckets=ratings,
             )
 
         if args.repo or args.all:
             repository_analysis(
-                document=document,
-                specification=spesification,
-                buckets=repos
+                document=document, specification=spesification, buckets=repos
             )
 
     if args.vulnerabilities or args.all:
