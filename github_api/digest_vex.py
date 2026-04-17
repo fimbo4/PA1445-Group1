@@ -790,6 +790,25 @@ def ratings_analysis(
     return buckets
 
 
+def repository_analysis(document, specification: str, buckets: dict) -> dict:
+    """
+    Extracts the repository the file comes from
+
+    Parameters
+    document - the mongodb document
+    spesification - the spesification of the current document file
+    buckets - the datastructure we add the repository data to
+
+    Returns
+    buckets
+    """
+    commit_url = document["commit_url"]
+    repo = commit_url.split("repos/")
+    repo = repo[1].split("/", 2)[0] + "/" + repo[1].split("/", 2)[1]
+    buckets[specification][repo] += 1
+    return buckets
+
+
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
     parser = argparse.ArgumentParser()
@@ -839,6 +858,11 @@ def input_arguments() -> argparse.Namespace:
         action="store_true",
         help="Analyses the mean mode and median for the number of vulnerabilities",
     )
+    parser.add_argument(
+        "--repo",
+        action="store_true",
+        help="Analyses the mean mode and median for the number of vulnerabilities",
+    )
 
     args = parser.parse_args()
     return args
@@ -875,6 +899,7 @@ def main() -> None:
         "CycloneDX": deepcopy(suported_ratings),
         "SPDX": deepcopy(suported_ratings),
     }
+    repos = deepcopy(tools)
 
     database = vexDB()
     document_count = database.count_documents()
@@ -985,6 +1010,13 @@ def main() -> None:
                 extention=extention,
                 spesification=spesification,
                 buckets=ratings
+            )
+
+        if args.repo or args.all:
+            repository_analysis(
+                document=document,
+                specification=spesification,
+                buckets=repos
             )
 
     if args.vulnerabilities or args.all:
