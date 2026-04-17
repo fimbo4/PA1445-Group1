@@ -1,29 +1,60 @@
 import argparse
 import os
+import re
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from io import StringIO
+from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
-from statistics import mean, median, mode
-import re
 
-
+# Regex constants
 ALPH = "a-zA-Z"
 NUM = "0-9"
+
+
+# Source - https://stackoverflow.com/a/68400507
+# Posted by Mark, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-04-17, License - CC BY-SA 4.0
+
+
+# We could also do class Finger(IntEnum) its equivalent.
+class Status(int, Enum):
+    def __new__(cls, value, label):
+        # Initialise an instance of the Finger enum class
+        obj = int.__new__(cls, value)
+        # Calling print(type(obj)) returns <enum 'Finger'>
+        # If we don't set the _value_ in the Enum class, an error will be raised.
+        obj._value_ = value
+        # Here we add an attribute to the finger class on the fly.
+        # One may want to use setattr to be more explicit; note the python docs don't do this
+        obj.label = label
+        return obj
+
+    FIXED = (3, "FIXED")
+    AFFECTED = (2, "AFFECTED")
+    NOT_AFFECTED = (1, "NOT_AFFECTED")
+    UNDER_INVESTIGATION = (0, "UNDER_INVESTIGATION")
+    UNKNOWN = (-1, "UNKNOWN")
+
+    @classmethod
+    def from_str(cls, input_str):
+        for finger in cls:
+            if finger.label == input_str:
+                return finger
+        raise ValueError(f"{cls.__name__} has no value matching {input_str}")
+
+
 class Extentions(Enum):
     JSON = 1
     XML = 2
 
 
 # 3 gather vex spesific datapoints
-# 3.a Average vulnerabilities per file
-# 3.d databases
-# 3.e Vulnerability status
 # 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
@@ -96,6 +127,7 @@ def tools_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+
 def spesification_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
@@ -145,6 +177,7 @@ def spesification_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+
 def database_analysis(
     vex, extention: Extentions, spesification: str, buckets: dict
 ) -> dict:
@@ -166,10 +199,16 @@ def database_analysis(
             for statement in vex["statements"]:
                 if type(statement) != dict:
                     continue
-                if ("vulnerability" in statement.keys() 
+                if (
+                    "vulnerability" in statement.keys()
                     and type(statement["vulnerability"]) == dict
-                    and "name" in statement["vulnerability"].keys()):
-                    buckets[strip_vulnarability_to_database(statement["vulnerability"]["name"])] += 1
+                    and "name" in statement["vulnerability"].keys()
+                ):
+                    buckets[
+                        strip_vulnarability_to_database(
+                            statement["vulnerability"]["name"]
+                        )
+                    ] += 1
                     found_vulnerability_database = True
                     if "aliases" in statement["vulnerability"].keys():
                         for alias in statement["vulnerability"]["aliases"]:
@@ -189,26 +228,42 @@ def database_analysis(
 
         elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
-                if (type(vulnerability) == dict
-                    and "id" in vulnerability.keys()):
+                if type(vulnerability) == dict and "id" in vulnerability.keys():
                     buckets[strip_vulnarability_to_database(vulnerability["id"])] += 1
                     found_vulnerability_database = True
 
         elif spesification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
-                if entry["type"] == "Vulnerability" and "externalIdentifier" in entry.keys():
+                if (
+                    entry["type"] == "Vulnerability"
+                    and "externalIdentifier" in entry.keys()
+                ):
                     for external_identifier in entry["externalIdentifier"]:
-                        if external_identifier["type"] == "ExternalIdentifier" and (external_identifier["externalIdentifierType"] == "cve" or external_identifier["externalIdentifierType"] == "securityOther"):
-                            buckets[strip_vulnarability_to_database(external_identifier["identifier"])] += 1
+                        if external_identifier["type"] == "ExternalIdentifier" and (
+                            external_identifier["externalIdentifierType"] == "cve"
+                            or external_identifier["externalIdentifierType"]
+                            == "securityOther"
+                        ):
+                            buckets[
+                                strip_vulnarability_to_database(
+                                    external_identifier["identifier"]
+                                )
+                            ] += 1
                             found_vulnerability_database = True
 
     elif extention == Extentions.XML:
         if spesification == "CycloneDX":
             namespaces_keys = list(vex.nsmap.keys())
             for key in namespaces_keys:
-                for vulnerabilities in vex.findall(f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap):
-                    for vulnerability in vulnerabilities.findall(f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap):
-                        for id in vulnerability.findall(f"{f"{key}:" if key else ""}id", namespaces=vex.nsmap):
+                for vulnerabilities in vex.findall(
+                    f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap
+                ):
+                    for vulnerability in vulnerabilities.findall(
+                        f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap
+                    ):
+                        for id in vulnerability.findall(
+                            f"{f"{key}:" if key else ""}id", namespaces=vex.nsmap
+                        ):
                             buckets[strip_vulnarability_to_database(id.text)] += 1
                             found_vulnerability_database = True
 
@@ -216,15 +271,16 @@ def database_analysis(
         buckets["count"] += 1
     return buckets
 
+
 def strip_vulnarability_to_database(input: str) -> str:
     """Tries to extract the datbase from the input"""
     if input == None or input.lower() == "none":
         return "NULL"
-    
+
     first_dash = input.rfind("-")
     if first_dash == -1:
         return "INVALID"
-    
+
     if input.startswith("http"):
         vulnerability = link_sanitation(input)
     else:
@@ -232,41 +288,55 @@ def strip_vulnarability_to_database(input: str) -> str:
 
     if vulnerability.find(":") != -1:
         first_half = vulnerability.split(":")[0]
-        database = first_half[:first_half.rfind("-")]
+        database = first_half[: first_half.rfind("-")]
     else:
         identifier_regex = f"[{ALPH}]{{2,7}}"
         min_one_number = f"(-(?=[{ALPH}]*[{NUM}])"
         segment_regex = f"({min_one_number}([{ALPH}{NUM}]){{2,15}}){{1,3}})"
         database_regex = f"{identifier_regex}{segment_regex}"
         # [a-zA-Z]{2,7}((-(?=[a-zA-Z]*[0-9])([a-zA-Z0-9]){2,15}){1,3})
-        
+
         result = re.match(pattern=database_regex, string=vulnerability)
         if not result:
             return "NOT_DATABASE"
         else:
             dash = vulnerability.find("-")
             first_half = vulnerability[:dash]
-            
+
             ident = re.match(pattern=identifier_regex, string=first_half)
             database = ident.group(0)
 
     return database
 
+
 def link_sanitation(vulnerability: str) -> str:
     """Removes the link from the vulnerablility"""
-    seperators = ["/", ",", "=", "?", ":", ]
+    seperators = [
+        "/",
+        ",",
+        "=",
+        "?",
+        ":",
+    ]
     counter = 0
     for char in reversed(vulnerability):
         if char in seperators:
             break
         else:
             counter += 1
-    
+
     start_index = len(vulnerability) - counter
     return vulnerability[start_index:]
 
-def vulnerabilities_analysis(vex, extension: Extentions, specification: str, vulnerabilities: dict, lacks_vulnerabilities: dict) -> None:
-    
+
+def vulnerabilities_analysis(
+    vex,
+    extension: Extentions,
+    specification: str,
+    vulnerabilities: dict,
+    lacks_vulnerabilities: dict,
+) -> None:
+
     if specification == "OpenVEX":
         if "statements" in vex.keys():
             vulnerabilities["OpenVEX"].append(len(vex["statements"]))
@@ -302,11 +372,254 @@ def vulnerabilities_analysis(vex, extension: Extentions, specification: str, vul
     elif specification == "SPDX" and "@graph" in vex.keys():
         vuln_count = 0
         for element in vex["@graph"]:
-            if element["type"] == "security_Vulnerability" or element["type"] == "Vulnerability":
+            if (
+                element["type"] == "security_Vulnerability"
+                or element["type"] == "Vulnerability"
+            ):
                 vuln_count += 1
         vulnerabilities["SPDX"].append(vuln_count)
         if vuln_count == 0:
             lacks_vulnerabilities["SPDX"] += 1
+
+
+def status_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    """
+    Extracts the status of the vulnerability and count the occurences
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add the databases to
+
+    Returns
+    buckets
+    """
+    found_status = False
+    if extention == Extentions.JSON:
+        if spesification == "OpenVEX" and "statements" in vex.keys():
+            for statement in vex["statements"]:
+                if type(statement) != dict:
+                    continue
+                if "status" in statement.keys():
+                    match (statement["status"]):
+                        case "not_affected":
+                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            found_status = True
+                            break
+                        case "affected":
+                            buckets[spesification][Status.AFFECTED.label] += 1
+                            found_status = True
+                            break
+                        case "fixed":
+                            buckets[spesification][Status.FIXED.label] += 1
+                            found_status = True
+                            break
+                        case "under_investigation":
+                            buckets[spesification][
+                                Status.UNDER_INVESTIGATION.label
+                            ] += 1
+                            found_status = True
+                            break
+                        case _:
+                            buckets[spesification][Status.UNKNOWN.label] += 1
+                            found_status = True
+                            break
+
+                    # buckets[strip_vulnarability_to_database(statement["vulnerability"]["name"])] += 1
+                    # found_vulnerability_database = True
+
+        elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if "product_status" in vulnerability.keys():
+                    # and "properties" in vulnerability["product_status"].keys()):
+                    final_products_properties = defaultdict()
+                    for property, products in vulnerability["product_status"].items():
+                        # 3.2.3.9
+                        for product in products:
+                            if product not in final_products_properties.keys():
+                                final_products_properties[product] = Status.UNKNOWN
+                            match property:
+                                case "first_affected":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.AFFECTED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.AFFECTED
+                                        )
+                                    break
+                                case "first_fixed":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.FIXED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.FIXED
+                                        )
+                                    break
+                                case "fixed":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.FIXED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.FIXED
+                                        )
+                                    break
+                                case "known_affected":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.AFFECTED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.AFFECTED
+                                        )
+                                    break
+                                case "known_not_affected":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.NOT_AFFECTED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.NOT_AFFECTED
+                                        )
+                                    break
+                                case "last_affected":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.AFFECTED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.AFFECTED
+                                        )
+                                    break
+                                case "recommended":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.FIXED
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.FIXED
+                                        )
+                                    break
+                                case "under_investigation":
+                                    if (
+                                        final_products_properties[product]
+                                        < Status.UNDER_INVESTIGATION
+                                    ):
+                                        final_products_properties[product] = (
+                                            Status.UNDER_INVESTIGATION
+                                        )
+                                    break
+                        for product, affects in final_products_properties.items():
+                            found_status = True
+                            buckets[spesification][affects.label] += 1
+
+        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if (
+                    type(vulnerability) == dict
+                    and "id" in vulnerability.keys()
+                    and "affects" in vulnerability.keys()
+                ):
+                    for affected in vulnerability["affects"]:
+                        found_status = True
+                        if "versions" in affected.keys():
+                            for version in affected["versions"]:
+                                if type(version) == dict and "status" in version.keys():
+                                    match version["status"]:
+                                        case "affected":
+                                            buckets[spesification][
+                                                Status.AFFECTED.label
+                                            ] += 1
+                                        case "unaffected":
+                                            buckets[spesification][
+                                                Status.NOT_AFFECTED.label
+                                            ] += 1
+                                        case "unknown":
+                                            buckets[spesification][
+                                                Status.UNKNOWN.label
+                                            ] += 1
+                        else:
+                            buckets[spesification][Status.UNKNOWN.label] += 1
+
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            relationships = [
+                "VexAffectedVulnAssessmentRelationship",
+                "VexFixedVulnAssessmentRelationship",
+                "VexNotAffectedVulnAssessmentRelationship",
+                "VexUnderInvestigationVulnAssessmentRelationship",
+            ]
+            for entry in vex["@graph"]:
+                if (
+                    entry["type"] == "Relationship"
+                    and entry["relationshipType"] in relationships
+                ):  # and "externalIdentifier" in entry.keys():
+                    found_status = True
+                    match entry["relationshipType"]:
+                        case "VexAffectedVulnAssessmentRelationship":
+                            buckets[spesification][Status.AFFECTED.label] += 1
+                            break
+                        case "VexFixedVulnAssessmentRelationship":
+                            buckets[spesification][Status.FIXED.label] += 1
+                            break
+                        case "VexNotAffectedVulnAssessmentRelationship":
+                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            break
+                        case "VexUnderInvestigationVulnAssessmentRelationship":
+                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            break
+
+    elif extention == Extentions.XML:
+        if spesification == "CycloneDX":
+            namespaces_keys = list(vex.nsmap.keys())
+            for key in namespaces_keys:
+                for vulnerabilities in vex.findall(
+                    f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap
+                ):
+                    for vulnerability in vulnerabilities.findall(
+                        f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap
+                    ):
+                        for affects in vulnerability.findall(
+                            f"{f"{key}:" if key else ""}affects", namespaces=vex.nsmap
+                        ):
+                            for target in affects.findall(
+                                f"{f"{key}:" if key else ""}target",
+                                namespaces=vex.nsmap,
+                            ):
+                                for versions in target.findall(
+                                    f"{f"{key}:" if key else ""}versions",
+                                    namespaces=vex.nsmap,
+                                ):
+                                    for version in versions.findall(
+                                        f"{f"{key}:" if key else ""}version",
+                                        namespaces=vex.nsmap,
+                                    ):
+                                        for status in version.findall(
+                                            f"{f"{key}:" if key else ""}status",
+                                            namespaces=vex.nsmap,
+                                        ):
+                                            found_status = True
+                                            match status.text:
+                                                case "affected":
+                                                    buckets[spesification][
+                                                        Status.AFFECTED.label
+                                                    ] += 1
+                                                case "unaffected":
+                                                    buckets[spesification][
+                                                        Status.NOT_AFFECTED.label
+                                                    ] += 1
+                                                case "unknown":
+                                                    buckets[spesification][
+                                                        Status.UNKNOWN.label
+                                                    ] += 1
+
+    if found_status:
+        buckets[spesification]["count"] += 1
+    return buckets
 
 
 def input_arguments() -> argparse.Namespace:
@@ -356,11 +669,12 @@ def input_arguments() -> argparse.Namespace:
         "-vuln",
         "--vulnerabilities",
         action="store_true",
-        help="Analyses the mean mode and median for the number of vulnerabilities"
+        help="Analyses the mean mode and median for the number of vulnerabilities",
     )
 
     args = parser.parse_args()
     return args
+
 
 def main() -> None:
     args = input_arguments()
@@ -372,19 +686,10 @@ def main() -> None:
         "SPDX": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
-    vulnerabilities = {
-        "OpenVEX": [],
-        "CSAF": [],
-        "CycloneDX": [],
-        "SPDX": []
-    }
-    lacks_vulnerabilities = {
-        "OpenVEX": 0,
-        "CSAF": 0,
-        "CycloneDX": 0,
-        "SPDX": 0
-    }
+    vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
+    lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
     databases = deepcopy(empty_dict)
+    statuses = deepcopy(tools)
 
     database = vexDB()
     document_count = database.count_documents()
@@ -466,14 +771,27 @@ def main() -> None:
                 buckets=versions,
             )
         if args.vulnerabilities or args.all:
-            vulnerabilities_analysis(vex=vex, extension=extention, specification=spesification, vulnerabilities=vulnerabilities, lacks_vulnerabilities=lacks_vulnerabilities)
+            vulnerabilities_analysis(
+                vex=vex,
+                extension=extention,
+                specification=spesification,
+                vulnerabilities=vulnerabilities,
+                lacks_vulnerabilities=lacks_vulnerabilities,
+            )
 
         if args.databases or args.all:
             databases = database_analysis(
-                vex=vex, 
-                extention=extention, 
-                spesification= spesification,
+                vex=vex,
+                extention=extention,
+                spesification=spesification,
                 buckets=databases,
+            )
+        if args.status or args.all:
+            status_analysis(
+                vex=vex,
+                extention=extention,
+                spesification=spesification,
+                buckets=statuses,
             )
 
     if args.vulnerabilities or args.all:
@@ -481,9 +799,11 @@ def main() -> None:
             v_median = median(vulnerabilities[key])
             v_mode = mode(vulnerabilities[key])
             v_mean = mean(vulnerabilities[key])
-            v_median_non_zero = median([val  for val in vulnerabilities[key] if val != 0])
-            v_mode_non_zero = mode([val  for val in vulnerabilities[key] if val != 0])
-            v_mean_non_zero = mean([val  for val in vulnerabilities[key] if val != 0])
+            v_median_non_zero = median(
+                [val for val in vulnerabilities[key] if val != 0]
+            )
+            v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
+            v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
     pass
 
 
