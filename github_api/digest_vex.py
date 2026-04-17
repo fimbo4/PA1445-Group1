@@ -1,10 +1,8 @@
 import argparse
-import os
 import re
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from io import StringIO
 from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
@@ -53,14 +51,11 @@ class Extentions(Enum):
     JSON = 1
     XML = 2
 
-
-# 3 gather vex spesific datapoints
-# 3.f Vulnerability severity (Buckets?)
 # 4 Make plots
 
 
 def tools_analysis(
-    vex, extention: Extentions, spesification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict
 ) -> dict:
     """
     Extracts the name of the tools used to generate the vex
@@ -68,7 +63,7 @@ def tools_analysis(
     Parameters
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
-    spesification - the spesification of the current Vex file
+    specification - the specification of the current Vex file
     buckets - the datastructure we add another tool to
 
     Returns
@@ -76,17 +71,17 @@ def tools_analysis(
     """
     found_tool = False
     if extention == Extentions.JSON:
-        if spesification == "OpenVEX" and "tooling" in vex.keys():
-            buckets[spesification][vex["tooling"]] += 1
+        if specification == "OpenVEX" and "tooling" in vex.keys():
+            buckets[specification][vex["tooling"]] += 1
             found_tool = True
 
-        elif spesification == "CSAF" and "document" in vex.keys():
+        elif specification == "CSAF" and "document" in vex.keys():
             # CSAF dosen't have a "tools" field, but a tool could be a publisher.
-            buckets[spesification][vex["document"]["publisher"]["name"]] += 1
+            buckets[specification][vex["document"]["publisher"]["name"]] += 1
             found_tool = True
 
         elif (
-            spesification == "CycloneDX"
+            specification == "CycloneDX"
             and "metadata" in vex.keys()
             and "tools"
             in vex["metadata"].keys()  # There has to be something in the tools
@@ -103,33 +98,33 @@ def tools_analysis(
                 tools = vex["metadata"]["tools"]
 
             for tool in tools:
-                buckets[spesification][tool["name"]] += 1
+                buckets[specification][tool["name"]] += 1
                 found_tool = True
 
-        elif spesification == "SPDX" and "@graph" in vex.keys():
+        elif specification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
                 if entry["type"] == "CreationInfo" and "createdUsing" in entry.keys():
                     for tool in entry["createdUsing"]:
-                        buckets[spesification][tool] += 1
+                        buckets[specification][tool] += 1
                         found_tool = True
 
     elif extention == Extentions.XML:
-        if spesification == "CycloneDX":
+        if specification == "CycloneDX":
             namespace = etree.QName(vex.tag).namespace
             for metadata in vex.findall(etree.QName(namespace, "metadata")):
                 for tools in metadata.findall(etree.QName(namespace, "tools")):
                     for tool in tools:
                         for sub_element in tool:
                             if etree.QName(sub_element.tag).localname == "name":
-                                buckets[spesification][sub_element.text] += 1
+                                buckets[specification][sub_element.text] += 1
                                 found_tool = True
     if found_tool:
-        buckets[spesification]["count"] += 1
+        buckets[specification]["count"] += 1
     return buckets
 
 
 def spesification_analysis(
-    vex, extention: Extentions, spesification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict
 ) -> dict:
     """
     Extracts the version number of the spesification
@@ -137,7 +132,7 @@ def spesification_analysis(
     Parameters
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
-    spesification - the spesification of the current Vex file
+    specification - the specification of the current Vex file
     buckets - the datastructure we add another version number to
 
     Returns
@@ -145,41 +140,41 @@ def spesification_analysis(
     """
     found_spesification = False
     if extention == Extentions.JSON:
-        if spesification == "OpenVEX" and "@context" in vex.keys():
+        if specification == "OpenVEX" and "@context" in vex.keys():
             context = vex["@context"]
             version = context.replace("https://openvex.dev/ns/v", "")
-            buckets[spesification][version] += 1
+            buckets[specification][version] += 1
             found_spesification = True
 
-        elif spesification == "CSAF" and "document" in vex.keys():
-            buckets[spesification][vex["document"]["csaf_version"]] += 1
+        elif specification == "CSAF" and "document" in vex.keys():
+            buckets[specification][vex["document"]["csaf_version"]] += 1
             found_spesification = True
 
-        elif spesification == "CycloneDX" and "specVersion" in vex.keys():
+        elif specification == "CycloneDX" and "specVersion" in vex.keys():
 
-            buckets[spesification][vex["specVersion"]] += 1
+            buckets[specification][vex["specVersion"]] += 1
             found_spesification = True
 
-        elif spesification == "SPDX" and "@graph" in vex.keys():
+        elif specification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
                 if entry["type"] == "CreationInfo" and "specVersion" in entry.keys():
-                    buckets[spesification][entry["specVersion"]] += 1
+                    buckets[specification][entry["specVersion"]] += 1
                     found_spesification = True
 
     elif extention == Extentions.XML:
-        if spesification == "CycloneDX":
+        if specification == "CycloneDX":
             namespace = etree.QName(vex.tag).namespace
             version = namespace.replace("http://cyclonedx.org/schema/bom/", "")
-            buckets[spesification][version] += 1
+            buckets[specification][version] += 1
             found_spesification = True
 
     if found_spesification:
-        buckets[spesification]["count"] += 1
+        buckets[specification]["count"] += 1
     return buckets
 
 
 def database_analysis(
-    vex, extention: Extentions, spesification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict
 ) -> dict:
     """
     Extracts the name of the databases the vulnerabilites come from
@@ -187,7 +182,7 @@ def database_analysis(
     Parameters
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
-    spesification - the spesification of the current Vex file
+    specification - the specification of the current Vex file
     buckets - the datastructure we add the databases to
 
     Returns
@@ -195,7 +190,7 @@ def database_analysis(
     """
     found_vulnerability_database = False
     if extention == Extentions.JSON:
-        if spesification == "OpenVEX" and "statements" in vex.keys():
+        if specification == "OpenVEX" and "statements" in vex.keys():
             for statement in vex["statements"]:
                 if type(statement) != dict:
                     continue
@@ -214,7 +209,7 @@ def database_analysis(
                         for alias in statement["vulnerability"]["aliases"]:
                             buckets[strip_vulnarability_to_database(alias)] += 1
 
-        elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
+        elif specification == "CSAF" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if "cve" in vulnerability.keys():
                     buckets[strip_vulnarability_to_database(vulnerability["cve"])] += 1
@@ -226,13 +221,13 @@ def database_analysis(
                         buckets[strip_vulnarability_to_database(id)] += 1
                         found_vulnerability_database = True
 
-        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+        elif specification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if type(vulnerability) == dict and "id" in vulnerability.keys():
                     buckets[strip_vulnarability_to_database(vulnerability["id"])] += 1
                     found_vulnerability_database = True
 
-        elif spesification == "SPDX" and "@graph" in vex.keys():
+        elif specification == "SPDX" and "@graph" in vex.keys():
             for entry in vex["@graph"]:
                 if (
                     entry["type"] == "Vulnerability"
@@ -252,7 +247,7 @@ def database_analysis(
                             found_vulnerability_database = True
 
     elif extention == Extentions.XML:
-        if spesification == "CycloneDX":
+        if specification == "CycloneDX":
             namespaces_keys = list(vex.nsmap.keys())
             for key in namespaces_keys:
                 for vulnerabilities in vex.findall(
@@ -383,7 +378,7 @@ def vulnerabilities_analysis(
 
 
 def status_analysis(
-    vex, extention: Extentions, spesification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict
 ) -> dict:
     """
     Extracts the status of the vulnerability and count the occurences
@@ -391,7 +386,7 @@ def status_analysis(
     Parameters
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
-    spesification - the spesification of the current Vex file
+    specification - the specification of the current Vex file
     buckets - the datastructure we add the databases to
 
     Returns
@@ -399,36 +394,36 @@ def status_analysis(
     """
     found_status = False
     if extention == Extentions.JSON:
-        if spesification == "OpenVEX" and "statements" in vex.keys():
+        if specification == "OpenVEX" and "statements" in vex.keys():
             for statement in vex["statements"]:
                 if type(statement) != dict:
                     continue
                 if "status" in statement.keys():
                     match (statement["status"]):
                         case "not_affected":
-                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            buckets[specification][Status.NOT_AFFECTED.label] += 1
                             found_status = True
                             break
                         case "affected":
-                            buckets[spesification][Status.AFFECTED.label] += 1
+                            buckets[specification][Status.AFFECTED.label] += 1
                             found_status = True
                             break
                         case "fixed":
-                            buckets[spesification][Status.FIXED.label] += 1
+                            buckets[specification][Status.FIXED.label] += 1
                             found_status = True
                             break
                         case "under_investigation":
-                            buckets[spesification][
+                            buckets[specification][
                                 Status.UNDER_INVESTIGATION.label
                             ] += 1
                             found_status = True
                             break
                         case _:
-                            buckets[spesification][Status.UNKNOWN.label] += 1
+                            buckets[specification][Status.UNKNOWN.label] += 1
                             found_status = True
                             break
 
-        elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
+        elif specification == "CSAF" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if "product_status" in vulnerability.keys():
                     final_products_properties = defaultdict()
@@ -511,9 +506,9 @@ def status_analysis(
                                     break
                         for product, affects in final_products_properties.items():
                             found_status = True
-                            buckets[spesification][affects.label] += 1
+                            buckets[specification][affects.label] += 1
 
-        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+        elif specification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if (
                     type(vulnerability) == dict
@@ -527,21 +522,21 @@ def status_analysis(
                                 if type(version) == dict and "status" in version.keys():
                                     match version["status"]:
                                         case "affected":
-                                            buckets[spesification][
+                                            buckets[specification][
                                                 Status.AFFECTED.label
                                             ] += 1
                                         case "unaffected":
-                                            buckets[spesification][
+                                            buckets[specification][
                                                 Status.NOT_AFFECTED.label
                                             ] += 1
                                         case "unknown":
-                                            buckets[spesification][
+                                            buckets[specification][
                                                 Status.UNKNOWN.label
                                             ] += 1
                         else:
-                            buckets[spesification][Status.UNKNOWN.label] += 1
+                            buckets[specification][Status.UNKNOWN.label] += 1
 
-        elif spesification == "SPDX" and "@graph" in vex.keys():
+        elif specification == "SPDX" and "@graph" in vex.keys():
             relationships = [
                 "VexAffectedVulnAssessmentRelationship",
                 "VexFixedVulnAssessmentRelationship",
@@ -556,20 +551,20 @@ def status_analysis(
                     found_status = True
                     match entry["relationshipType"]:
                         case "VexAffectedVulnAssessmentRelationship":
-                            buckets[spesification][Status.AFFECTED.label] += 1
+                            buckets[specification][Status.AFFECTED.label] += 1
                             break
                         case "VexFixedVulnAssessmentRelationship":
-                            buckets[spesification][Status.FIXED.label] += 1
+                            buckets[specification][Status.FIXED.label] += 1
                             break
                         case "VexNotAffectedVulnAssessmentRelationship":
-                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            buckets[specification][Status.NOT_AFFECTED.label] += 1
                             break
                         case "VexUnderInvestigationVulnAssessmentRelationship":
-                            buckets[spesification][Status.NOT_AFFECTED.label] += 1
+                            buckets[specification][Status.NOT_AFFECTED.label] += 1
                             break
 
     elif extention == Extentions.XML:
-        if spesification == "CycloneDX":
+        if specification == "CycloneDX":
             namespaces_keys = list(vex.nsmap.keys())
             for key in namespaces_keys:
                 for vulnerabilities in vex.findall(
@@ -600,25 +595,25 @@ def status_analysis(
                                             found_status = True
                                             match status.text:
                                                 case "affected":
-                                                    buckets[spesification][
+                                                    buckets[specification][
                                                         Status.AFFECTED.label
                                                     ] += 1
                                                 case "unaffected":
-                                                    buckets[spesification][
+                                                    buckets[specification][
                                                         Status.NOT_AFFECTED.label
                                                     ] += 1
                                                 case "unknown":
-                                                    buckets[spesification][
+                                                    buckets[specification][
                                                         Status.UNKNOWN.label
                                                     ] += 1
 
     if found_status:
-        buckets[spesification]["count"] += 1
+        buckets[specification]["count"] += 1
     return buckets
 
 
 def ratings_analysis(
-    vex, extention: Extentions, spesification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict
 ) -> dict:
     """
     Extracts the severity of vulnerabilities
@@ -626,7 +621,7 @@ def ratings_analysis(
     Parameters
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
-    spesification - the spesification of the current Vex file
+    specification - the specification of the current Vex file
     buckets - the datastructure we add the databases to
 
     Returns
@@ -634,7 +629,7 @@ def ratings_analysis(
     """
     found_rating = False
     if extention == Extentions.JSON:
-        if spesification == "CSAF" and "vulnerabilities" in vex.keys():
+        if specification == "CSAF" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if "scores" in vulnerability.keys():
                     for item in vulnerability["scores"]:
@@ -643,21 +638,21 @@ def ratings_analysis(
                                 case "cvss_v2":
                                     if item[system]["baseScore"]:
                                         found_rating = True
-                                        buckets[spesification]["CVSS"]["2"] += 1
+                                        buckets[specification]["CVSS"]["2"] += 1
                                         score = float(item[system]["baseScore"])
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["ratings"].append(score)
                                     break
                                 case "cvss_v3":
                                     if item[system]["baseScore"]:
                                         found_rating = True
-                                        buckets[spesification]["CVSS"]["3"] += 1
+                                        buckets[specification]["CVSS"]["3"] += 1
                                         score = float(item[system]["baseScore"])
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["ratings"].append(score)
                                     break
                                 case _:
                                     break
 
-        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+        elif specification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if type(vulnerability) == dict and "ratings" in vulnerability.keys():
                     for item in vulnerability["ratings"]:
@@ -667,15 +662,15 @@ def ratings_analysis(
                                     if "score" in item.keys():
                                         score = item["score"]
                                         found_rating = True
-                                        buckets[spesification]["CVSS"]["2"] += 1
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["CVSS"]["2"] += 1
+                                        buckets[specification]["ratings"].append(score)
                                     break
                                 case "CVSSv3" | "CVSSv31":
                                     if "score" in item.keys():
                                         score = item["score"]
                                         found_rating = True
-                                        buckets[spesification]["CVSS"]["3"] += 1
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["CVSS"]["3"] += 1
+                                        buckets[specification]["ratings"].append(score)
                                     break
                                 case "other":
                                     if (
@@ -685,10 +680,10 @@ def ratings_analysis(
                                         found_rating = True
                                         score = item["score"]
                                         name = item["source"]["name"]
-                                        buckets[spesification]["other"].append(
+                                        buckets[specification]["other"].append(
                                             {"score": score, "name": name}
                                         )
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["ratings"].append(score)
                                     break
                                 # While supported none were found in the dataset
                                 # so the code has been left incomplete
@@ -696,12 +691,12 @@ def ratings_analysis(
                                     if "score" in item.keys():
                                         score = item["score"]
                                         found_rating = True
-                                        buckets[spesification]["CVSS"]["4"] += 1
-                                        buckets[spesification]["ratings"].append(score)
+                                        buckets[specification]["CVSS"]["4"] += 1
+                                        buckets[specification]["ratings"].append(score)
                                 case "OWASP":
                                     break
 
-        elif spesification == "SPDX" and "@graph" in vex.keys():
+        elif specification == "SPDX" and "@graph" in vex.keys():
             relationships = [
                 "CvssV2VulnAssessmentRelationship",
                 "CvssV3VulnAssessmentRelationship",
@@ -718,26 +713,26 @@ def ratings_analysis(
                     found_rating = True
                     match entry["relationshipType"]:
                         case "CvssV2VulnAssessmentRelationship":
-                            buckets[spesification]["CVSS"]["2"] += 1
-                            buckets[spesification]["ratings"].append(
+                            buckets[specification]["CVSS"]["2"] += 1
+                            buckets[specification]["ratings"].append(
                                 float(entry["security_score"])
                             )
                             break
                         case "CvssV3VulnAssessmentRelationship":
-                            buckets[spesification]["CVSS"]["3"] += 1
-                            buckets[spesification]["ratings"].append(
+                            buckets[specification]["CVSS"]["3"] += 1
+                            buckets[specification]["ratings"].append(
                                 float(entry["security_score"])
                             )
                             break
                         case "CvssV4VulnAssessmentRelationship":
-                            buckets[spesification]["CVSS"]["4"] += 1
-                            buckets[spesification]["ratings"].append(
+                            buckets[specification]["CVSS"]["4"] += 1
+                            buckets[specification]["ratings"].append(
                                 float(entry["security_score"])
                             )
                             break
 
     elif extention == Extentions.XML:
-        if spesification == "CycloneDX":
+        if specification == "CycloneDX":
             namespaces_keys = list(vex.nsmap.keys())
             for key in namespaces_keys:
                 for vulnerabilities in vex.findall(
@@ -770,15 +765,15 @@ def ratings_analysis(
                                     match method.text:
                                         case "CVSSv2":
                                             found_rating = True
-                                            buckets[spesification]["CVSS"]["2"] += 1
-                                            buckets[spesification]["ratings"].append(
+                                            buckets[specification]["CVSS"]["2"] += 1
+                                            buckets[specification]["ratings"].append(
                                                 score
                                             )
                                             break
                                         case "CVSSv3" | "CVSSv31":
                                             found_rating = True
-                                            buckets[spesification]["CVSS"]["3"] += 1
-                                            buckets[spesification]["ratings"].append(
+                                            buckets[specification]["CVSS"]["3"] += 1
+                                            buckets[specification]["ratings"].append(
                                                 score
                                             )
                                             break
@@ -800,17 +795,17 @@ def ratings_analysis(
                                                 f"{f"{key}:" if key else ""}name",
                                                 namespaces=vex.nsmap,
                                             ).text
-                                            buckets[spesification]["other"].append(
+                                            buckets[specification]["other"].append(
                                                 {"score": score, "name": name}
                                             )
-                                            buckets[spesification]["ratings"].append(
+                                            buckets[specification]["ratings"].append(
                                                 score
                                             )
                                             break
                                         case "CVSSv4":
                                             found_rating = True
-                                            buckets[spesification]["CVSS"]["4"] += 1
-                                            buckets[spesification]["ratings"].append(
+                                            buckets[specification]["CVSS"]["4"] += 1
+                                            buckets[specification]["ratings"].append(
                                                 score
                                             )
                                             break
@@ -819,7 +814,7 @@ def ratings_analysis(
                                         case "OWASP":
                                             break
     if found_rating:
-        buckets[spesification]["count"] += 1
+        buckets[specification]["count"] += 1
     return buckets
 
 
@@ -829,7 +824,7 @@ def repository_analysis(document, specification: str, buckets: dict) -> dict:
 
     Parameters
     document - the mongodb document
-    spesification - the spesification of the current document file
+    specification - the specification of the current document file
     buckets - the datastructure we add the repository data to
 
     Returns
@@ -935,7 +930,7 @@ def main() -> None:
     errors = []
     non_VEX_count = 0
     non_VEX = []
-    for document, spesification in tqdm(
+    for document, specification in tqdm(
         database.get_all_documents(),
         desc="Analyzing documents",
         total=document_count,
@@ -979,7 +974,7 @@ def main() -> None:
             or type(vex) == list
             or (
                 type(vex) == dict
-                and (spesification != "CycloneDX" and spesification != "CSAF")
+                and (specification != "CycloneDX" and specification != "CSAF")
                 and "$schema" in vex.keys()
             )
         ):
@@ -1000,20 +995,20 @@ def main() -> None:
         # Analysis
         if args.tools or args.all:
             tools = tools_analysis(
-                vex=vex, extention=extention, spesification=spesification, buckets=tools
+                vex=vex, extention=extention, specification=specification, buckets=tools
             )
         if args.version or args.all:
             versions = spesification_analysis(
                 vex=vex,
                 extention=extention,
-                spesification=spesification,
+                specification=specification,
                 buckets=versions,
             )
         if args.vulnerabilities or args.all:
             vulnerabilities_analysis(
                 vex=vex,
                 extension=extention,
-                specification=spesification,
+                specification=specification,
                 vulnerabilities=vulnerabilities,
                 lacks_vulnerabilities=lacks_vulnerabilities,
             )
@@ -1022,14 +1017,14 @@ def main() -> None:
             databases = database_analysis(
                 vex=vex,
                 extention=extention,
-                spesification=spesification,
+                specification=specification,
                 buckets=databases,
             )
         if args.status or args.all:
             status_analysis(
                 vex=vex,
                 extention=extention,
-                spesification=spesification,
+                specification=specification,
                 buckets=statuses,
             )
 
@@ -1037,13 +1032,13 @@ def main() -> None:
             ratings_analysis(
                 vex=vex,
                 extention=extention,
-                spesification=spesification,
+                specification=specification,
                 buckets=ratings,
             )
 
         if args.repo or args.all:
             repository_analysis(
-                document=document, specification=spesification, buckets=repos
+                document=document, specification=specification, buckets=repos
             )
 
     if args.vulnerabilities or args.all:
