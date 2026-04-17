@@ -428,16 +428,11 @@ def status_analysis(
                             found_status = True
                             break
 
-                    # buckets[strip_vulnarability_to_database(statement["vulnerability"]["name"])] += 1
-                    # found_vulnerability_database = True
-
         elif spesification == "CSAF" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if "product_status" in vulnerability.keys():
-                    # and "properties" in vulnerability["product_status"].keys()):
                     final_products_properties = defaultdict()
                     for property, products in vulnerability["product_status"].items():
-                        # 3.2.3.9
                         for product in products:
                             if product not in final_products_properties.keys():
                                 final_products_properties[product] = Status.UNKNOWN
@@ -557,7 +552,7 @@ def status_analysis(
                 if (
                     entry["type"] == "Relationship"
                     and entry["relationshipType"] in relationships
-                ):  # and "externalIdentifier" in entry.keys():
+                ):
                     found_status = True
                     match entry["relationshipType"]:
                         case "VexAffectedVulnAssessmentRelationship":
@@ -621,6 +616,179 @@ def status_analysis(
         buckets[spesification]["count"] += 1
     return buckets
 
+def ratings_analysis(
+    vex, extention: Extentions, spesification: str, buckets: dict
+) -> dict:
+    """
+    Extracts the severity of vulnerabilities
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    spesification - the spesification of the current Vex file
+    buckets - the datastructure we add the databases to
+
+    Returns
+    buckets
+    """
+    found_rating = False
+    if extention == Extentions.JSON:
+        if spesification == "CSAF" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if "scores" in vulnerability.keys():
+                    for item in vulnerability["scores"]:
+                        for system in item.keys():
+                            match system:
+                                case "cvss_v2":
+                                    if item[system]["baseScore"]:
+                                        found_rating = True
+                                        buckets[spesification]["CVSS"]["2"] += 1
+                                        score = float(item[system]["baseScore"])
+                                        buckets[spesification]["ratings"].append(score)
+                                    break
+                                case "cvss_v3":
+                                    if item[system]["baseScore"]:
+                                        found_rating = True
+                                        buckets[spesification]["CVSS"]["3"] += 1
+                                        score = float(item[system]["baseScore"])
+                                        buckets[spesification]["ratings"].append(score)
+                                    break
+                                case _:
+                                    break
+
+        elif spesification == "CycloneDX" and "vulnerabilities" in vex.keys():
+            for vulnerability in vex["vulnerabilities"]:
+                if (
+                    type(vulnerability) == dict
+                    and "ratings" in vulnerability.keys()
+                ):
+                    for item in vulnerability["ratings"]:
+                        if "method" in item.keys():
+                            match item["method"]:
+                                case "CVSSv2":
+                                    if "score" in item.keys():
+                                        score = item["score"]
+                                        found_rating = True
+                                        buckets[spesification]["CVSS"]["2"] += 1
+                                        buckets[spesification]["ratings"].append(score)
+                                    break
+                                case "CVSSv3" | "CVSSv31":
+                                    if "score" in item.keys():
+                                        score = item["score"]
+                                        found_rating = True
+                                        buckets[spesification]["CVSS"]["3"] += 1
+                                        buckets[spesification]["ratings"].append(score)
+                                    break
+                                case "other":
+                                    if ("score" in item.keys()
+                                        and "source" in item.keys()):
+                                        found_rating = True
+                                        score = item["score"]
+                                        name = item["source"]["name"]
+                                        buckets[spesification]["other"].append({"score": score, "name": name})
+                                        buckets[spesification]["ratings"].append(score)
+                                    break
+                                # While supported none were found in the dataset
+                                # so the code has been left incomplete
+                                case "CVSSv4":
+                                    if "score" in item.keys():
+                                        score = item["score"]
+                                        found_rating = True
+                                        buckets[spesification]["CVSS"]["4"] += 1
+                                        buckets[spesification]["ratings"].append(score)
+                                case "OWASP":
+                                    break
+
+        elif spesification == "SPDX" and "@graph" in vex.keys():
+            relationships = [
+                "CvssV2VulnAssessmentRelationship",
+                "CvssV3VulnAssessmentRelationship",
+                "CvssV4VulnAssessmentRelationship",
+                "EpssVulnAssessmentRelationship",
+                "SsvcVulnAssessmentRelationship",
+            ]
+            for entry in vex["@graph"]:
+                if (
+                    entry["type"] == "Relationship"
+                    and entry["relationshipType"] in relationships
+                    and "security_score" in entry
+                ):
+                    found_rating = True
+                    match entry["relationshipType"]:
+                        case "CvssV2VulnAssessmentRelationship":
+                            buckets[spesification]["CVSS"]["2"] += 1
+                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            break
+                        case "CvssV3VulnAssessmentRelationship":
+                            buckets[spesification]["CVSS"]["3"] += 1
+                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            break
+                        case "CvssV4VulnAssessmentRelationship":
+                            buckets[spesification]["CVSS"]["4"] += 1
+                            buckets[spesification]["ratings"].append(float(entry["security_score"]))
+                            break
+
+    elif extention == Extentions.XML:
+        if spesification == "CycloneDX":
+            namespaces_keys = list(vex.nsmap.keys())
+            for key in namespaces_keys:
+                for vulnerabilities in vex.findall(
+                    f"{f"{key}:" if key else ""}vulnerabilities", namespaces=vex.nsmap
+                ):
+                    for vulnerability in vulnerabilities.findall(
+                        f"{f"{key}:" if key else ""}vulnerability", namespaces=vex.nsmap
+                    ):
+                        for ratings in vulnerability.findall(
+                            f"{f"{key}:" if key else ""}ratings", namespaces=vex.nsmap
+                        ):
+                            for rating in ratings.findall(
+                                f"{f"{key}:" if key else ""}rating",
+                                namespaces=vex.nsmap,
+                            ):
+                                score_str = rating.find(f"{f"{key}:" if key else ""}score", namespaces=vex.nsmap)
+                                method = rating.find(f"{f"{key}:" if key else ""}method", namespaces=vex.nsmap)
+
+                                try:
+                                    score = float(score_str.text)
+                                except Exception as err:
+                                    continue
+                                if method is not None:
+                                    match method.text:
+                                        case "CVSSv2":
+                                            found_rating = True
+                                            buckets[spesification]["CVSS"]["2"] += 1
+                                            buckets[spesification]["ratings"].append(score)
+                                            break
+                                        case "CVSSv3" | "CVSSv31":
+                                            found_rating = True
+                                            buckets[spesification]["CVSS"]["3"] += 1
+                                            buckets[spesification]["ratings"].append(score)
+                                            break
+                                        case "other":
+                                            source = rating.find(f"{f"{key}:" if key else ""}source", namespaces=vex.nsmap)
+                                            if source is None:
+                                                continue
+                                            name_element = source.find(f"{f"{key}:" if key else ""}name", namespaces=vex.nsmap)
+                                            if name_element is None:
+                                                continue
+                                            found_rating = True
+                                            name = source.find(f"{f"{key}:" if key else ""}name", namespaces=vex.nsmap).text
+                                            buckets[spesification]["other"].append({"score": score, "name": name})
+                                            buckets[spesification]["ratings"].append(score)
+                                            break
+                                        case "CVSSv4":
+                                            found_rating = True
+                                            buckets[spesification]["CVSS"]["4"] += 1
+                                            buckets[spesification]["ratings"].append(score)
+                                            break
+                                        # While supported none were found in the dataset
+                                        # so the code has been left incomplete
+                                        case "OWASP":
+                                            break
+    if found_rating:
+        buckets[spesification]["count"] += 1
+    return buckets
+
 
 def input_arguments() -> argparse.Namespace:
     """Defines input arguments, use -h or --help to find out more."""
@@ -655,9 +823,9 @@ def input_arguments() -> argparse.Namespace:
         help="Analyses the different statuses the vulnerabilites has",
     )
     parser.add_argument(
-        "--severity",
+        "--rating",
         action="store_true",
-        help="Analyses the severity the culnerabilites has",
+        help="Analyses the ratings the vulnerabilites has",
     )
     parser.add_argument(
         "-p",
@@ -690,6 +858,23 @@ def main() -> None:
     lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
     databases = deepcopy(empty_dict)
     statuses = deepcopy(tools)
+    suported_ratings = {
+            "CVSS": {
+                "2": 0,
+                "3": 0,
+                "4": 0
+            },
+            "OWASP": 0,
+            "other": [],
+            "ratings": [],
+            "count" : 0
+        }
+    ratings = {
+        "OpenVEX": deepcopy(suported_ratings),
+        "CSAF": deepcopy(suported_ratings),
+        "CycloneDX": deepcopy(suported_ratings),
+        "SPDX": deepcopy(suported_ratings),
+    }
 
     database = vexDB()
     document_count = database.count_documents()
@@ -792,6 +977,14 @@ def main() -> None:
                 extention=extention,
                 spesification=spesification,
                 buckets=statuses,
+            )
+
+        if args.rating or args.all:
+            ratings_analysis(
+                vex=vex,
+                extention=extention,
+                spesification=spesification,
+                buckets=ratings
             )
 
     if args.vulnerabilities or args.all:
