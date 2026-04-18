@@ -1,0 +1,72 @@
+from lxml import etree
+
+from .extentions import Extentions
+
+
+def tools_analysis(
+    vex, extention: Extentions, specification: str, buckets: dict
+) -> dict:
+    """
+    Extracts the name of the tools used to generate the vex
+
+    Parameters
+    vex - the Vex file
+    extention - the extention of the vex file, this is so we can handle both json and xml
+    specification - the specification of the current Vex file
+    buckets - the datastructure we add another tool to
+
+    Returns
+    buckets
+    """
+    found_tool = False
+    if extention == Extentions.JSON:
+        if specification == "OpenVEX" and "tooling" in vex.keys():
+            buckets[specification][vex["tooling"]] += 1
+            found_tool = True
+
+        elif specification == "CSAF" and "document" in vex.keys():
+            # CSAF dosen't have a "tools" field, but a tool could be a publisher.
+            buckets[specification][vex["document"]["publisher"]["name"]] += 1
+            found_tool = True
+
+        elif (
+            specification == "CycloneDX"
+            and "metadata" in vex.keys()
+            and "tools"
+            in vex["metadata"].keys()  # There has to be something in the tools
+            and len(vex["metadata"]["tools"]) != 0
+        ):
+
+            # Handle different kind of tools
+            if type(vex["metadata"]["tools"]) == dict:
+                if "components" in vex["metadata"]["tools"].keys():
+                    tools = vex["metadata"]["tools"]["components"]
+                elif "services" in vex["metadata"]["tools"]:
+                    tools = vex["metadata"]["tools"]["services"]
+            elif type(vex["metadata"]["tools"]) == list:
+                tools = vex["metadata"]["tools"]
+
+            for tool in tools:
+                buckets[specification][tool["name"]] += 1
+                found_tool = True
+
+        elif specification == "SPDX" and "@graph" in vex.keys():
+            for entry in vex["@graph"]:
+                if entry["type"] == "CreationInfo" and "createdUsing" in entry.keys():
+                    for tool in entry["createdUsing"]:
+                        buckets[specification][tool] += 1
+                        found_tool = True
+
+    elif extention == Extentions.XML:
+        if specification == "CycloneDX":
+            namespace = etree.QName(vex.tag).namespace
+            for metadata in vex.findall(etree.QName(namespace, "metadata")):
+                for tools in metadata.findall(etree.QName(namespace, "tools")):
+                    for tool in tools:
+                        for sub_element in tool:
+                            if etree.QName(sub_element.tag).localname == "name":
+                                buckets[specification][sub_element.text] += 1
+                                found_tool = True
+    if found_tool:
+        buckets[specification]["count"] += 1
+    return buckets
