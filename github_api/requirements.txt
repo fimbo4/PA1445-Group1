@@ -6,3 +6,4 @@ matplotlib==3.10.8
 tqdm==4.67.3
 json-with-comments==1.2.10
 lxml==6.0.4
+seaborn==0.13.2
