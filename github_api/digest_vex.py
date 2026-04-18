@@ -185,7 +185,7 @@ def main() -> None:
                 buckets=versions,
             )
         if args.vulnerabilities or args.all:
-            vulnerabilities_analysis(
+            vulnerabilities, lacks_vulnerabilities = vulnerabilities_analysis(
                 vex=vex,
                 extension=extention,
                 specification=specification,
@@ -201,7 +201,7 @@ def main() -> None:
                 buckets=databases,
             )
         if args.status or args.all:
-            status_analysis(
+            statuses = status_analysis(
                 vex=vex,
                 extention=extention,
                 specification=specification,
@@ -209,7 +209,7 @@ def main() -> None:
             )
 
         if args.rating or args.all:
-            ratings_analysis(
+            ratings = ratings_analysis(
                 vex=vex,
                 extention=extention,
                 specification=specification,
@@ -217,7 +217,7 @@ def main() -> None:
             )
 
         if args.repo or args.all:
-            repository_analysis(
+            repos = repository_analysis(
                 document=document, specification=specification, buckets=repos
             )
 
