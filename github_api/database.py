@@ -1,3 +1,5 @@
+from typing import Generator
+
 from pymongo import MongoClient
 
 
@@ -19,10 +21,37 @@ class vexDB:
         except:
             print(f"Failed to add file to {collection}")
 
-    def retrieve_collection_data(self, collection: str) -> None:
+    def retrieve_collection_data(self, collection: str) -> Generator[dict]:
         collection = self.db.get_collection(collection)
         for item in collection.find():
-            print(item)
+            yield item
+
+    def get_all_documents(self) -> Generator[(dict, str)]:
+        collections = self.get_collections()
+        for collection in collections:
+            for document in self.retrieve_collection_data(collection):
+                yield document, collection
+
+    def get_collections(self) -> list[str]:
+        filter = {
+            "name": {"$regex": r"^(?!system\.)"}
+        }  # Ignores the system collections
+        collections = self.db.list_collection_names(filter=filter)
+        return collections
+
+    def get_documents_per_collections(self) -> dict:
+        collections = self.get_collections()
+        counters = dict(name=collections)
+        for collection in collections:
+            counters[collection] = self.db.get_collection(collection).count_documents(filter={})
+        return counters
+
+    def count_documents(self) -> int:
+        collections = self.get_collections()
+        count = 0
+        for collection in collections:
+            count += self.db.get_collection(collection).count_documents(filter={})
+        return count
 
     def clear_collection(self, collection: str) -> None:
         self.db.get_collection(collection).delete_many({})
