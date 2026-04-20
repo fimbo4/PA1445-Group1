@@ -9,7 +9,7 @@ from analysis.Rating import ratings_analysis
 from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
-from analysis.Tools import tools_analysis
+from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
 from analysis.Vulnerability_database import database_analysis
 from database import vexDB
@@ -231,6 +231,10 @@ def main() -> None:
             )
             v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
             v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
+    if args.plots:
+        file_counts = database.get_documents_per_collections()
+        if args.tools or args.all:
+            tools_tables(buckets=tools, file_count=file_counts, folder="")
     pass
 
 

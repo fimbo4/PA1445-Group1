@@ -1,4 +1,6 @@
 from lxml import etree
+import pandas as pd
+import seaborn as sns
 
 from .extentions import Extentions
 
@@ -70,3 +72,12 @@ def tools_analysis(
     if found_tool:
         buckets[specification]["count"] += 1
     return buckets
+
+
+def tools_tables(buckets: dict, file_count: dict, folder: str) -> None:
+    # Tables?
+    #   Particularly for % of files with tools
+    # Combine buckets?
+    tools_vs_non_tools_df = pd.DataFrame(data=buckets)
+    tools_vs_non_tools_df.drop()
+    pass
