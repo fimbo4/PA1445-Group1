@@ -1,6 +1,8 @@
-from lxml import etree
+from pathlib import Path
+
 import pandas as pd
 import seaborn as sns
+from lxml import etree
 
 from .extentions import Extentions
 
@@ -74,10 +76,22 @@ def tools_analysis(
     return buckets
 
 
-def tools_tables(buckets: dict, file_count: dict, folder: str) -> None:
-    # Tables?
-    #   Particularly for % of files with tools
-    # Combine buckets?
-    tools_vs_non_tools_df = pd.DataFrame(data=buckets)
-    tools_vs_non_tools_df.drop()
-    pass
+def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
+    file_names = ["count_tools.tex"]
+    contense = []
+    tools_vs_non_tools = {}
+    for specification in buckets:
+        tools_vs_non_tools[specification] = {
+            "count": buckets[specification]["count"],
+            "percentage": buckets[specification]["count"] / file_count[specification],
+        }
+    tools_vs_non_tools_df = pd.DataFrame(data=tools_vs_non_tools)
+    tools_vs_non_tools_df = tools_vs_non_tools_df.transpose()
+    contense.append(tools_vs_non_tools_df.to_latex())
+
+    for file_name, content in zip(file_names, contense):
+        filepath = folder / file_name
+        if not filepath.exists():
+            filepath.touch()
+        with filepath.open("w", encoding="utf-8") as file:
+            file.write(content)
