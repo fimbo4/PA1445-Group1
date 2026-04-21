@@ -87,7 +87,8 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         }
     tools_vs_non_tools_df = pd.DataFrame(data=tools_vs_non_tools)
     tools_vs_non_tools_df = tools_vs_non_tools_df.transpose()
-    contense.append(tools_vs_non_tools_df.to_latex())
+    contense.append(tools_vs_non_tools_df.to_latex(float_format="%.2f", decimal=",", label="Tools proportion", caption="Table detailing the proportion of files generated with a tool"))
+    # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.io.formats.style.Styler.to_latex.html#pandas.io.formats.style.Styler.to_latex instead?
 
     for file_name, content in zip(file_names, contense):
         filepath = folder / file_name
