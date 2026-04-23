@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+# from pandas.io.format.style import Styler
 import seaborn as sns
 from lxml import etree
 
@@ -79,6 +80,10 @@ def tools_analysis(
 def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     file_names = ["count_tools.tex"]
     contense = []
+
+    # base_styler = pd.io.formats.style.Styler(precision=2, decimal=",", thousands=" ", escape="latex")
+
+    # Percentage of tools
     tools_vs_non_tools = {}
     for specification in buckets:
         tools_vs_non_tools[specification] = {
@@ -87,8 +92,15 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         }
     tools_vs_non_tools_df = pd.DataFrame(data=tools_vs_non_tools)
     tools_vs_non_tools_df = tools_vs_non_tools_df.transpose()
-    contense.append(tools_vs_non_tools_df.to_latex(float_format="%.2f", decimal=",", label="Tools proportion", caption="Table detailing the proportion of files generated with a tool"))
+    styler = pd.io.formats.style.Styler(data=tools_vs_non_tools_df, precision=2, decimal=",", thousands=" ", escape="latex")
+    contense.append(styler.to_latex(position_float="centering", label="Tools proportion", caption="Table detailing the proportion of files generated with a tool", hrules=True))
     # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.io.formats.style.Styler.to_latex.html#pandas.io.formats.style.Styler.to_latex instead?
+
+    # Map buckets
+    tools = pd.DataFrame(buckets)
+    styler = pd.io.formats.style.Styler(data=tools, precision=2, decimal=",", thousands=" ", escape="latex")
+    file_names.append("Tools_in_use.tex")
+    contense.append(styler.to_latex(position_float="centering", label="Tools", caption="Table naming all the tools used", hrules=True))
 
     for file_name, content in zip(file_names, contense):
         filepath = folder / file_name
