@@ -1,6 +1,7 @@
 import argparse
 from collections import defaultdict
 from copy import deepcopy
+from pathlib import Path
 from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
@@ -233,8 +234,11 @@ def main() -> None:
             v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
     if args.plots:
         file_counts = database.get_documents_per_collections()
+        current_path = Path(__file__).parent
         if args.tools or args.all:
-            tools_tables(buckets=tools, file_count=file_counts, folder="")
+            folder = current_path / "results/tools"
+            folder.mkdir(parents=True, exist_ok=True)
+            tools_tables(buckets=tools, file_count=file_counts, folder=folder)
     pass
 
 

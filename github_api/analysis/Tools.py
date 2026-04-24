@@ -1,6 +1,7 @@
-from lxml import etree
+from pathlib import Path
+
 import pandas as pd
-import seaborn as sns
+from lxml import etree
 
 from .extentions import Extentions
 
@@ -74,10 +75,99 @@ def tools_analysis(
     return buckets
 
 
-def tools_tables(buckets: dict, file_count: dict, folder: str) -> None:
-    # Tables?
-    #   Particularly for % of files with tools
-    # Combine buckets?
-    tools_vs_non_tools_df = pd.DataFrame(data=buckets)
-    tools_vs_non_tools_df.drop()
-    pass
+def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
+    file_names = ["count_tools.tex"]
+    content = []
+
+    # Percentage of tools
+    tools_vs_non_tools = {}
+    for specification in buckets:
+        tools_vs_non_tools[specification] = {
+            "count": buckets[specification]["count"],
+            "percentage": buckets[specification]["count"] / file_count[specification],
+        }
+    tools_vs_non_tools_df = pd.DataFrame(data=tools_vs_non_tools)
+    tools_vs_non_tools_df = tools_vs_non_tools_df.transpose()
+    styler = tools_vs_non_tools_df.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    content.append(
+        styler.to_latex(
+            position_float="centering",
+            label="Tools proportion",
+            caption="Table detailing the proportion of files generated with a tool",
+            hrules=True,
+        )
+    )
+
+    tools = pd.DataFrame(buckets)
+    CycloneDX_tools = tools.dropna(subset=["CycloneDX"])
+    CycloneDX_tools.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
+    styler = CycloneDX_tools.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("CycloneDX_tools.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="CycloneDX_tools",
+            caption="Table naming all the tools used in CycloneDX files",
+            hrules=True,
+        )
+    )
+
+    CSAF_tools = tools.dropna(subset=["CSAF"])
+    CSAF_tools.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
+    styler = CSAF_tools.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("CSAF_tools.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="CSAF_tools",
+            caption="Table naming all the tools used in CSAF files",
+            hrules=True,
+        )
+    )
+
+    OpenVEX_tools = tools.dropna(subset=["OpenVEX"])
+    OpenVEX_tools.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
+    styler = OpenVEX_tools.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("OpenVEX_tools.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="OpenVEX_tools",
+            caption="Table naming all the tools used in OpenVEX files",
+            hrules=True,
+        )
+    )
+
+    SPDX_tools = tools.dropna(subset=["SPDX"])
+    SPDX_tools.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
+    styler = SPDX_tools.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("SPDX_tools.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="SPDX_tools",
+            caption="Table naming all the tools used in SPDX files",
+            hrules=True,
+        )
+    )
+
+    for file_name, content in zip(file_names, content):
+        filepath = folder / file_name
+        if not filepath.exists():
+            filepath.touch()
+        with filepath.open("w", encoding="utf-8") as file:
+            file.write(content)
