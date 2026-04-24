@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pandas as pd
-import seaborn as sns
 from lxml import etree
 
 from .extentions import Extentions
