@@ -6,7 +6,7 @@ from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
-from analysis.Rating import ratings_analysis
+from analysis.Rating import ratings_analysis, rating_plots
 from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
@@ -234,6 +234,10 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        if args.rating or args.all:
+            folder = current_path / "results/ratings"
+            folder.mkdir(parents=True, exist_ok=True)
+            rating_plots(ratings, ratings_counter, file_count=file_counts, folder=folder)
     pass
 
 

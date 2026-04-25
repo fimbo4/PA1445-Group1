@@ -159,3 +159,88 @@ def ratings_analysis(
     if found_rating:
         counter[specification] += 1
     return table
+
+def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> None:
+    file_names = []
+    content = []
+    
+    rating_percentage = {}
+    for specification in counter.keys():
+        rating_percentage[specification] = {
+            "count": counter[specification],
+            "percentage": counter[specification] / file_count[specification],
+        }
+    rating_percentage_df = pd.DataFrame(data=rating_percentage)
+    rating_percentage_df = rating_percentage_df.transpose()
+    styler = rating_percentage_df.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("count_rating.tex")
+    content.append(
+        styler.to_latex(
+            position_float="centering",
+            label="Rating proportion",
+            caption="Table detailing the proportion of files that included some for of rating",
+            hrules=True,
+        )
+    )
+
+    # Table for count aka CVSS
+    
+    # ratings = {"None": pd.Series(), "Low": pd.Series(), "Medium": pd.Series(), "High": pd.Series(), "Critical": pd.Series()}
+    # for score in table["CycloneDX"]["ratings"]:
+    #     if score == 0:
+    #         ratings["None"].add(score)
+    #     elif score >= 0.1 and score <= 3.9:
+    #         ratings["Low"].add(score)
+    #     elif score >= 4 and score <= 6.9:
+    #         ratings["Medium"].add(score)
+    #     elif score >= 7 and score <= 8.9:
+    #         ratings["High"].add(score)
+    #     elif score >= 9 and score <= 10:
+    #         ratings["Critical"].add(score)
+    # ratings_df = pd.DataFrame(data=ratings)
+    for row in table:
+        if row["method"] in ["CVSSv2", "cvss_v2"]:
+            row["method"] = "CVSS v2"
+        elif row["method"] in ["CVSSv3", "cvss_v3", "CVSSv31"]:
+            row["method"] = "CVSS v3"
+        elif row["method"] in ["CVSSv4", "cvss_v4"]:
+            row["method"] = "CVSS v4"
+    ratings = pd.DataFrame(table)
+    # Raw Rating's distribution
+    figure, axes = plt.subplots(figsize=(7, 5))
+    plot = sns.histplot(
+        data=ratings,
+        x="score",
+        hue="method",
+        multiple="stack",
+    )
+    plt.xlabel("Severity")
+    plt.ylabel("Count")
+    plt.title("Rating distribution")
+    figure.savefig(folder / "rating_historgram.svg")
+
+    # Normalized data 
+    figure, axes = plt.subplots(figsize=(7, 5))
+    plot = sns.histplot(
+        data=ratings,
+        x="score",
+        hue="method",
+        # multiple="stack",
+        stat="percent",
+        common_norm=False,
+        element="step"
+    )
+    sns.move_legend(plot, loc="upper left", bbox_to_anchor=(1, 1))
+    plt.xlabel("Severity")
+    plt.ylabel("Percent")
+    plt.title("Rating distribution (normalized)")
+    figure.savefig(folder / "rating_historgram_normalized.svg")
+
+    for file_name, content in zip(file_names, content):
+        filepath = folder / file_name
+        if not filepath.exists():
+            filepath.touch()
+        with filepath.open("w", encoding="utf-8") as file:
+            file.write(content)
