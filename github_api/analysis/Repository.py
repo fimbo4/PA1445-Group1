@@ -29,6 +29,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     repos = pd.DataFrame(buckets)
     CSAF_repos = repos.dropna(subset=["CSAF"])
     CSAF_repos.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
+    CSAF_repos.drop(labels=["count"], axis="index", inplace=True)
     styler = CSAF_repos.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -45,6 +46,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
 
     CycloneDX_repos = repos.dropna(subset=["CycloneDX"])
     CycloneDX_repos.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
+    CycloneDX_repos.drop(labels=["count"], axis="index", inplace=True)
     styler = CycloneDX_repos.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -61,6 +63,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
 
     OpenVEX_repos = repos.dropna(subset=["OpenVEX"])
     OpenVEX_repos.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
+    OpenVEX_repos.drop(labels=["count"], axis="index", inplace=True)
     styler = OpenVEX_repos.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -77,6 +80,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
 
     SPDX_repos = repos.dropna(subset=["SPDX"])
     SPDX_repos.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
+    SPDX_repos.drop(labels=["count"], axis="index", inplace=True)
     styler = SPDX_repos.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
