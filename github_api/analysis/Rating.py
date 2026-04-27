@@ -185,21 +185,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
         )
     )
 
-    # Table for count aka CVSS
-    
-    # ratings = {"None": pd.Series(), "Low": pd.Series(), "Medium": pd.Series(), "High": pd.Series(), "Critical": pd.Series()}
-    # for score in table["CycloneDX"]["ratings"]:
-    #     if score == 0:
-    #         ratings["None"].add(score)
-    #     elif score >= 0.1 and score <= 3.9:
-    #         ratings["Low"].add(score)
-    #     elif score >= 4 and score <= 6.9:
-    #         ratings["Medium"].add(score)
-    #     elif score >= 7 and score <= 8.9:
-    #         ratings["High"].add(score)
-    #     elif score >= 9 and score <= 10:
-    #         ratings["Critical"].add(score)
-    # ratings_df = pd.DataFrame(data=ratings)
+    # Combine CVSS labels
     for row in table:
         if row["method"] in ["CVSSv2", "cvss_v2"]:
             row["method"] = "CVSS v2"
@@ -208,8 +194,9 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
         elif row["method"] in ["CVSSv4", "cvss_v4"]:
             row["method"] = "CVSS v4"
     ratings = pd.DataFrame(table)
+    
     # Raw Rating's distribution
-    figure, axes = plt.subplots(figsize=(7, 5))
+    figure, axes = plt.subplots()
     plot = sns.histplot(
         data=ratings,
         x="score",
@@ -219,10 +206,10 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     plt.xlabel("Severity")
     plt.ylabel("Count")
     plt.title("Rating distribution")
-    figure.savefig(folder / "rating_historgram.svg")
+    figure.savefig(folder / "rating_historgram.svg", bbox_inches="tight")
 
     # Normalized data 
-    figure, axes = plt.subplots(figsize=(7, 5))
+    figure, axes = plt.subplots()
     plot = sns.histplot(
         data=ratings,
         x="score",
@@ -236,7 +223,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     plt.xlabel("Severity")
     plt.ylabel("Percent")
     plt.title("Rating distribution (normalized)")
-    figure.savefig(folder / "rating_historgram_normalized.svg")
+    figure.savefig(folder / "rating_historgram_normalized.svg", bbox_inches="tight")
 
     for file_name, content in zip(file_names, content):
         filepath = folder / file_name
