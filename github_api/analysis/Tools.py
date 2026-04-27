@@ -103,6 +103,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     tools = pd.DataFrame(buckets)
     CycloneDX_tools = tools.dropna(subset=["CycloneDX"])
     CycloneDX_tools.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
+    CycloneDX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = CycloneDX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -119,6 +120,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     CSAF_tools = tools.dropna(subset=["CSAF"])
     CSAF_tools.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
+    CSAF_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = CSAF_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -135,6 +137,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     OpenVEX_tools = tools.dropna(subset=["OpenVEX"])
     OpenVEX_tools.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
+    OpenVEX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = OpenVEX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -151,6 +154,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     SPDX_tools = tools.dropna(subset=["SPDX"])
     SPDX_tools.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
+    SPDX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = SPDX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
