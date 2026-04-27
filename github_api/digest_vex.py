@@ -8,7 +8,7 @@ import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
 from analysis.Rating import ratings_analysis
 from analysis.Repository import repository_analysis
-from analysis.Specification import specification_analysis
+from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
@@ -239,6 +239,12 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        elif args.version or args.all:
+            folder = current_path / "results/specification"
+            folder.mkdir(parents=True, exist_ok=True)
+            specification_tables(
+                buckets=versions, file_count=file_counts, folder=folder
+            )
     pass
 
 

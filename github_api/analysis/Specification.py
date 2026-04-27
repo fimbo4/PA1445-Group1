@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import pandas as pd
 from lxml import etree
 
 from .extentions import Extentions
@@ -52,4 +55,52 @@ def specification_analysis(
         buckets[specification]["count"] += 1
     return buckets
 
-def 
+
+def specification_tables(buckets: dict, file_count: dict, folder: Path) -> None:
+    file_names = []
+    content = []
+
+    # Percentage of tools
+    specification_count = {}
+    for specification in buckets:
+        specification_count[specification] = {
+            "count": buckets[specification]["count"],
+            "percentage": buckets[specification]["count"] / file_count[specification],
+        }
+    specification_count_df = pd.DataFrame(data=specification_count)
+    specification_count_df = specification_count_df.transpose()
+    styler = specification_count_df.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("count_specification.tex")
+    content.append(
+        styler.to_latex(
+            position_float="centering",
+            label="Tools proportion",
+            caption="Table detailing the proportion of files generated with a tool",
+            hrules=True,
+        )
+    )
+
+    specifications = pd.DataFrame(buckets)
+    specifications.fillna(value=0, inplace=True)
+    styler = specifications.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("specifications.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="SPDX_tools",
+            caption="Table showing the different versions that were found for the specifications",
+            hrules=True,
+        )
+    )
+
+    for file_name, content in zip(file_names, content):
+        filepath = folder / file_name
+        if not filepath.exists():
+            filepath.touch()
+        with filepath.open("w", encoding="utf-8") as file:
+            file.write(content)
