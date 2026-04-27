@@ -84,6 +84,7 @@ def specification_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     specifications = pd.DataFrame(buckets)
     specifications.fillna(value=0, inplace=True)
+    specifications.drop(labels=["count"], axis="index", inplace=True)
     styler = specifications.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
