@@ -9,7 +9,7 @@ from analysis.extentions import Extentions
 from analysis.Rating import ratings_analysis
 from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
-from analysis.Status import status_analysis
+from analysis.Status import status_analysis, status_tables
 from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
 from analysis.Vulnerability_database import database_analysis
@@ -239,6 +239,10 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        elif args.status or args.all:
+            folder = current_path / "results/status"
+            folder.mkdir(parents=True, exist_ok=True)
+            status_tables(buckets=statuses, file_count=file_counts, folder=folder)
     pass
 
 
