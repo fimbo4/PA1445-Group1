@@ -14,12 +14,7 @@ SPDX_VEX_HEUR = ["Vulnerability"]
 
 SAMPLE_SIZE = 600
 
-ids = {
-    "OpenVEX": [],
-    "CSAF": [],
-    "SPDX": [],
-    "CycloneDX": []
-}
+
 
 def random_document_indexes(collection_size, num_docs) -> list:
     if num_docs <= collection_size:
@@ -27,7 +22,13 @@ def random_document_indexes(collection_size, num_docs) -> list:
     else:
         return random.sample(range(collection_size), collection_size)
     
-def gen_doc_indexes():
+def gen_doc_indexes() -> dict:
+    ids = {
+        "OpenVEX": [],
+        "CSAF": [],
+        "SPDX": [],
+        "CycloneDX": []
+    }
     collections = db.get_collections()
     for collection in collections:
         doc_indexes = random_document_indexes(db.get_collection_size(collection), SAMPLE_SIZE)
@@ -37,6 +38,7 @@ def gen_doc_indexes():
             if index in doc_indexes:
                 ids[collection].append(document["_id"])
             index += 1
+    return ids
 
 
 def parse_diff(patch, filetype):
@@ -148,7 +150,7 @@ def get_commit_data(document, specification):
 
 
 def main():
-    gen_doc_indexes()
+    ids = gen_doc_indexes()
     document_count = db.count_documents()
     for document, specification in tqdm(
     db.get_all_documents(),
