@@ -12,7 +12,7 @@ from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
-from analysis.Vulnerability_database import database_analysis
+from analysis.Vulnerability_database import database_analysis, database_tables
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
@@ -239,6 +239,10 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        elif args.databases or args.all:
+            folder = current_path / "results/databases"
+            folder.mkdir(parents=True, exist_ok=True)
+            database_tables(buckets=databases, file_count=file_counts, folder=folder)
     pass
 
 
