@@ -158,13 +158,12 @@ def main():
         unit="documents",
     ):
         if document["_id"] in ids[specification]:
-            collection = database.db.get_collection(specification)
             result = get_commit_data(document, specification)
-            if result is not None:
-                if len(result) > 0:
-                    collection.update_one(
-                        {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
-                    )
+            if result is not None and len(result) > 0:
+                collection = database.db.get_collection(specification)
+                collection.update_one(
+                    {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
+                )
 
 
 if __name__ == "__main__":
