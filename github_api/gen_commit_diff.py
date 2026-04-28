@@ -1,8 +1,9 @@
+import random
+import re
+
 from database import vexDB
 from main import retry_request
 from tqdm import tqdm
-import re
-import random
 
 random.seed("vex")
 
@@ -15,23 +16,20 @@ SPDX_VEX_HEUR = ["Vulnerability"]
 SAMPLE_SIZE = 600
 
 
-
 def random_document_indexes(collection_size, num_docs) -> list:
     if num_docs <= collection_size:
         return random.sample(range(collection_size), num_docs)
     else:
         return random.sample(range(collection_size), collection_size)
-    
+
+
 def gen_doc_indexes() -> dict:
-    ids = {
-        "OpenVEX": [],
-        "CSAF": [],
-        "SPDX": [],
-        "CycloneDX": []
-    }
+    ids = {"OpenVEX": [], "CSAF": [], "SPDX": [], "CycloneDX": []}
     collections = db.get_collections()
     for collection in collections:
-        doc_indexes = random_document_indexes(db.get_collection_size(collection), SAMPLE_SIZE)
+        doc_indexes = random_document_indexes(
+            db.get_collection_size(collection), SAMPLE_SIZE
+        )
         documents = db.retrieve_collection_data(collection)
         index = 0
         for document in documents:
@@ -78,7 +76,7 @@ def parse_diff(patch, filetype):
     return {
         "added_fields": added_keys,
         "removed_fields": remov_keys,
-        "updated_fields": updated_keys
+        "updated_fields": updated_keys,
     }
 
 
@@ -102,9 +100,10 @@ def categorize_change(patch, filetype, specification):
             break
 
     if probably_vex:
-        return parse_diff(patch, filetype)   
+        return parse_diff(patch, filetype)
     else:
         return None
+
 
 def get_commit_diffs(commit_data, filename, filetype, specification):
     commit_list = []
@@ -135,8 +134,7 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
                         diff_data["timestamp"] = commit_timestamp
                     commit_list.append(diff_data)
     return commit_list
-                
-                
+
 
 def get_commit_data(document, specification):
     if "commit_url" not in document.keys():
@@ -146,25 +144,29 @@ def get_commit_data(document, specification):
         commit_data = commit_data.json()
     else:
         return None
-    return get_commit_diffs(commit_data, document["filename"], document["extension"], specification)
+    return get_commit_diffs(
+        commit_data, document["filename"], document["extension"], specification
+    )
 
 
 def main():
     ids = gen_doc_indexes()
     document_count = db.count_documents()
     for document, specification in tqdm(
-    db.get_all_documents(),
-    desc="Analyzing documents",
-    total=document_count,
-    unit="documents",
+        db.get_all_documents(),
+        desc="Analyzing documents",
+        total=document_count,
+        unit="documents",
     ):
-        
+
         if document["_id"] in ids[specification]:
             collection = db.db.get_collection(specification)
             result = get_commit_data(document, specification)
             if result is not None:
                 if len(result) > 0:
-                    collection.update_one({"_id": document["_id"]}, {"$set": {"commit_diffs": result}})
+                    collection.update_one(
+                        {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
+                    )
 
 
 if __name__ == "__main__":

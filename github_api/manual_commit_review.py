@@ -1,9 +1,10 @@
-from database import vexDB
-import random
+import json
 import os
-import json 
-from tqdm import tqdm
+import random
+
+from database import vexDB
 from main import retry_request
+from tqdm import tqdm
 
 db = vexDB()
 random.seed("vex")
@@ -11,6 +12,7 @@ random.seed("vex")
 SAMPLE_SIZE = 100
 
 commit_urls = []
+
 
 def random_document_indexes(collection_size, num_docs) -> list:
     if num_docs <= collection_size:
@@ -22,7 +24,9 @@ def random_document_indexes(collection_size, num_docs) -> list:
 def gen_doc_lists():
     collections = db.get_collections()
     for collection in collections:
-        doc_indexes = random_document_indexes(db.get_collection_size(collection), SAMPLE_SIZE)
+        doc_indexes = random_document_indexes(
+            db.get_collection_size(collection), SAMPLE_SIZE
+        )
         documents = db.retrieve_collection_data(collection)
         index = 0
         for document in documents:
@@ -33,7 +37,7 @@ def gen_doc_lists():
                     commits = commits.json()
                     for commit in commits:
                         commit_list.append(commit["html_url"])
-                commit_urls.append((collection, commit_list))    
+                commit_urls.append((collection, commit_list))
             index += 1
 
 
@@ -71,7 +75,7 @@ def loop(index: int, commit_data: dict):
             else:
                 cur_index += 1
                 continue
-            
+
         commit_data["index"] = cur_index
         with open("commit_data.json", "w") as cd:
             json.dump(commit_data, cd)
@@ -84,36 +88,24 @@ def main():
             commit_data = json.loads(cd.read())
     else:
         fresh_data = {
-                "index": 0,
-                "OpenVEX": {
-                    "added": 0,
-                    "init": 0,
-                    "updated": 0,
-                    "deleted": 0,
-                    "unknown": 0
-                },
-                "CSAF": {
-                    "added": 0,
-                    "init": 0,
-                    "updated": 0,
-                    "deleted": 0,
-                    "unknown": 0
-                },
-                "CycloneDX": {
-                    "added": 0,
-                    "init": 0,
-                    "updated": 0,
-                    "deleted": 0,
-                    "unknown": 0
-                },
-                "SPDX": {
-                    "added": 0,
-                    "init": 0,
-                    "updated": 0,
-                    "deleted": 0,
-                    "unknown": 0
-                }
-            }
+            "index": 0,
+            "OpenVEX": {
+                "added": 0,
+                "init": 0,
+                "updated": 0,
+                "deleted": 0,
+                "unknown": 0,
+            },
+            "CSAF": {"added": 0, "init": 0, "updated": 0, "deleted": 0, "unknown": 0},
+            "CycloneDX": {
+                "added": 0,
+                "init": 0,
+                "updated": 0,
+                "deleted": 0,
+                "unknown": 0,
+            },
+            "SPDX": {"added": 0, "init": 0, "updated": 0, "deleted": 0, "unknown": 0},
+        }
         with open("commit_data.json", "w") as cd:
             json.dump(fresh_data, cd)
         commit_data = fresh_data

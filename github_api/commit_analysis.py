@@ -13,7 +13,7 @@ def get_timediff(commits) -> list:
 
     if not commits:
         return timediffs
-    
+
     prev_time = None
     for commit in commits:
         datetime = parse(commit["commit"]["author"]["date"])
@@ -27,12 +27,7 @@ def get_timediff(commits) -> list:
 
 def main():
 
-    commit_results = {
-    "OpenVEX": {},
-    "CSAF": {},
-    "CycloneDX": {},
-    "SPDX": {}
-    }
+    commit_results = {"OpenVEX": {}, "CSAF": {}, "CycloneDX": {}, "SPDX": {}}
 
     db = vexDB()
     document_count = db.count_documents()
@@ -52,18 +47,18 @@ def main():
 
         if commits is not None:
             commits = commits.json()
-        
+
         timediffs = get_timediff(commits)
         num_commits = 0
 
         if commits is not None:
             num_commits = len(commits)
-        
+
         filename = document["filename"]
 
         if filename not in commit_results[specification][repo].keys():
             commit_results[specification][repo][filename] = {}
-        
+
         commit_results[specification][repo]["timediffs"] = timediffs
         commit_results[specification][repo]["num_commits"] = num_commits
 
@@ -72,4 +67,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

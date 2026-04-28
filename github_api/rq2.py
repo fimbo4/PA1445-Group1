@@ -1,11 +1,13 @@
 import random
+from statistics import mean
+
 from database import vexDB
 from main import retry_request
-from statistics import mean
 
 random.seed("vex")
 
-#get 100 random files from db and count number of commits they have
+# get 100 random files from db and count number of commits they have
+
 
 def random_document_indexes(collection_size, num_docs) -> list:
     if num_docs <= collection_size:
@@ -27,20 +29,22 @@ def main():
         counter = 0
         for document in documents:
             if index in doc_indexes:
-                #print(f"{collection}-{counter} : {document["commit_url"]}")
+                # print(f"{collection}-{counter} : {document["commit_url"]}")
                 response = retry_request(document["commit_url"])
-                #print(len(response.json()))
+                # print(len(response.json()))
                 if response is not None:
                     total_commits += len(response.json())
                     num_commits_list.append(len(response.json()))
                     for item in response.json():
                         print(item["html_url"])
-                        #input("Continue?")
-                    #print(counter)
+                        # input("Continue?")
+                    # print(counter)
                     counter += 1
             index += 1
-    print(f"Number of commits: {total_commits}, average number of commits {mean(num_commits_list)}")
-    
+    print(
+        f"Number of commits: {total_commits}, average number of commits {mean(num_commits_list)}"
+    )
+
 
 if __name__ == "__main__":
     main()
