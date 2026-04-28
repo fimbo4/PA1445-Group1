@@ -7,8 +7,6 @@ from tqdm import tqdm
 
 random.seed("vex")
 
-db = vexDB()
-
 CDX_VEX_HEUR = ["vulnerabilities", "affects", "ratings", "cwes"]
 CSAF_VEX_HEUR = ["vulnerabilities", "csaf_vex", "affected"]
 SPDX_VEX_HEUR = ["Vulnerability"]
@@ -23,14 +21,14 @@ def random_document_indexes(collection_size, num_docs) -> list:
         return random.sample(range(collection_size), collection_size)
 
 
-def gen_doc_indexes() -> dict:
+def gen_doc_indexes(database: vexDB) -> dict:
     ids = {"OpenVEX": [], "CSAF": [], "SPDX": [], "CycloneDX": []}
-    collections = db.get_collections()
+    collections = database.get_collections()
     for collection in collections:
         doc_indexes = random_document_indexes(
-            db.get_collection_size(collection), SAMPLE_SIZE
+            database.get_collection_size(collection), SAMPLE_SIZE
         )
-        documents = db.retrieve_collection_data(collection)
+        documents = database.retrieve_collection_data(collection)
         index = 0
         for document in documents:
             if index in doc_indexes:
@@ -150,17 +148,17 @@ def get_commit_data(document, specification):
 
 
 def main():
+    database = vexDB()
     ids = gen_doc_indexes()
-    document_count = db.count_documents()
+    document_count = database.count_documents()
     for document, specification in tqdm(
-        db.get_all_documents(),
+        database.get_all_documents(),
         desc="Analyzing documents",
         total=document_count,
         unit="documents",
     ):
-
         if document["_id"] in ids[specification]:
-            collection = db.db.get_collection(specification)
+            collection = database.db.get_collection(specification)
             result = get_commit_data(document, specification)
             if result is not None:
                 if len(result) > 0:
