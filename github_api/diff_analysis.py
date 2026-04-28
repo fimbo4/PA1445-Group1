@@ -8,9 +8,9 @@ random.seed("vex")
 
 SAMPLE_SIZE = 300  # 600
 
-ids = {"OpenVEX": [], "CSAF": [], "SPDX": [], "CycloneDX": []}
 
-values = {"OpenVEX": 0, "CycloneDX": 0, "CSAF": 0, "SPDX": 0}
+
+
 
 
 def random_document_indexes(collection_size, num_docs) -> list:
@@ -21,6 +21,8 @@ def random_document_indexes(collection_size, num_docs) -> list:
 
 
 def gen_doc_indexes():
+    ids = {"OpenVEX": [], "CSAF": [], "SPDX": [], "CycloneDX": []}
+    values = {"OpenVEX": 0, "CycloneDX": 0, "CSAF": 0, "SPDX": 0}
     collections = db.get_collections()
     for collection in collections:
         doc_indexes = random_document_indexes(
@@ -34,10 +36,11 @@ def gen_doc_indexes():
                 if "commit_diffs" in document.keys():
                     values[collection] += 1
             index += 1
+    return ids, values
 
 
 def main():
-
+    ids, values = gen_doc_indexes()
     document_count = db.count_documents()
     for document, specification in tqdm(
         db.get_all_documents(),
@@ -54,5 +57,4 @@ def main():
 
 
 if __name__ == "__main__":
-    gen_doc_indexes()
     main()
