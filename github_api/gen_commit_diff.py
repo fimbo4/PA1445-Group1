@@ -113,10 +113,12 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
             continue
         commit_diffs = commit_diffs.json()
         commit_timestamp = None
-        if "commit" in commit_diffs.keys():
-            if "author" in commit_diffs["commit"].keys():
-                if "date" in commit_diffs["commit"]["author"].keys():
-                    commit_timestamp = commit_diffs["commit"]["author"]["date"]
+        if (
+            "commit" in commit_diffs.keys()
+            and "author" in commit_diffs["commit"].keys()
+            and "date" in commit_diffs["commit"]["author"].keys()
+        ):
+            commit_timestamp = commit_diffs["commit"]["author"]["date"]
         if "files" not in commit_diffs.keys():
             continue
         for file in commit_diffs["files"]:
