@@ -23,7 +23,7 @@ class vexDB:
 
     def retrieve_collection_data(self, collection: str) -> Generator[dict]:
         collection = self.db.get_collection(collection)
-        for item in collection.find():
+        for item in collection.find(no_cursor_timeout=True).sort("_id", 1):
             yield item
 
     def get_all_documents(self) -> Generator[(dict, str)]:
