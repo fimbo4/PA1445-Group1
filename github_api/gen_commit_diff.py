@@ -11,34 +11,6 @@ CDX_VEX_HEUR = ["vulnerabilities", "affects", "ratings", "cwes"]
 CSAF_VEX_HEUR = ["vulnerabilities", "csaf_vex", "affected"]
 SPDX_VEX_HEUR = ["Vulnerability"]
 
-<<<<<<< HEAD
-=======
-SAMPLE_SIZE = 600
-
-
-def random_document_indexes(collection_size, num_docs) -> list:
-    if num_docs <= collection_size:
-        return random.sample(range(collection_size), num_docs)
-    else:
-        return random.sample(range(collection_size), collection_size)
-
-
-def gen_doc_indexes(database: vexDB) -> dict:
-    ids = {"OpenVEX": [], "CSAF": [], "SPDX": [], "CycloneDX": []}
-    collections = database.get_collections()
-    for collection in collections:
-        doc_indexes = random_document_indexes(
-            database.get_collection_size(collection), SAMPLE_SIZE
-        )
-        documents = database.retrieve_collection_data(collection)
-        index = 0
-        for document in documents:
-            if index in doc_indexes:
-                ids[collection].append(document["_id"])
-            index += 1
-    return ids
-
->>>>>>> 994d915cd7bc9442b876e49bb35fe1e163d572ef
 
 def parse_diff(patch, filetype):
     added_lines = []
@@ -119,21 +91,13 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
             continue
         commit_diffs = commit_diffs.json()
         commit_timestamp = None
-<<<<<<< HEAD
         if ("commit" in commit_diffs.keys()
-=======
-        if (
-            "commit" in commit_diffs.keys()
->>>>>>> 994d915cd7bc9442b876e49bb35fe1e163d572ef
             and "author" in commit_diffs["commit"].keys()
             and "date" in commit_diffs["commit"]["author"].keys()
         ):
             commit_timestamp = commit_diffs["commit"]["author"]["date"]
-<<<<<<< HEAD
         if commit_timestamp is not None:
             commit_instance["timestamp"] = commit_timestamp
-=======
->>>>>>> 994d915cd7bc9442b876e49bb35fe1e163d572ef
         if "files" not in commit_diffs.keys():
             continue
         for file in commit_diffs["files"]:
@@ -149,11 +113,7 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
         if len(commit_instance["patches"]) > 0:
             commit_list.append(commit_instance)
     return commit_list
-<<<<<<< HEAD
                 
-=======
-
->>>>>>> 994d915cd7bc9442b876e49bb35fe1e163d572ef
 
 def get_commit_data(document, specification):
     if "commit_url" not in document.keys():
@@ -170,7 +130,6 @@ def get_commit_data(document, specification):
 
 def main():
     database = vexDB()
-<<<<<<< HEAD
     collections = database.get_collections()
     for collection in collections:
         documents = database.retrieve_collection_data(collection)
@@ -186,20 +145,6 @@ def main():
             result = get_commit_data(document, collection)
             if result and len(result) > 0:
                 collection = database.db.get_collection(collection)
-=======
-    ids = gen_doc_indexes()
-    document_count = database.count_documents()
-    for document, specification in tqdm(
-        database.get_all_documents(),
-        desc="Analyzing documents",
-        total=document_count,
-        unit="documents",
-    ):
-        if document["_id"] in ids[specification]:
-            result = get_commit_data(document, specification)
-            if result is not None and len(result) > 0:
-                collection = database.db.get_collection(specification)
->>>>>>> 994d915cd7bc9442b876e49bb35fe1e163d572ef
                 collection.update_one(
                     {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
                 )
