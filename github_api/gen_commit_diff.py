@@ -6,37 +6,9 @@ import random
 
 random.seed("vex")
 
-db = vexDB()
-
 CDX_VEX_HEUR = ["vulnerabilities", "affects", "ratings", "cwes"]
 CSAF_VEX_HEUR = ["vulnerabilities", "csaf_vex", "affected"]
 SPDX_VEX_HEUR = ["Vulnerability"]
-
-SAMPLE_SIZE = 600
-
-ids = {
-    "OpenVEX": [],
-    "CSAF": [],
-    "SPDX": [],
-    "CycloneDX": []
-}
-
-def random_document_indexes(collection_size, num_docs) -> list:
-    if num_docs <= collection_size:
-        return random.sample(range(collection_size), num_docs)
-    else:
-        return random.sample(range(collection_size), collection_size)
-    
-def gen_doc_indexes():
-    collections = db.get_collections()
-    for collection in collections:
-        doc_indexes = random_document_indexes(db.get_collection_size(collection), SAMPLE_SIZE)
-        documents = db.retrieve_collection_data(collection)
-        index = 0
-        for document in documents:
-            if index in doc_indexes:
-                ids[collection].append(document["_id"])
-            index += 1
 
 
 def parse_diff(patch, filetype):
@@ -107,6 +79,9 @@ def categorize_change(patch, filetype, specification):
 def get_commit_diffs(commit_data, filename, filetype, specification):
     commit_list = []
     for commit in commit_data:
+        commit_instance = {
+            "patches": []
+        }
         if commit is None:
             continue
         commit_diffs = retry_request(commit["url"])
@@ -114,10 +89,13 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
             continue
         commit_diffs = commit_diffs.json()
         commit_timestamp = None
-        if "commit" in commit_diffs.keys():
-            if "author" in commit_diffs["commit"].keys():
-                if "date" in commit_diffs["commit"]["author"].keys():
-                    commit_timestamp = commit_diffs["commit"]["author"]["date"]
+        if ("commit" in commit_diffs.keys()
+            and "author" in commit_diffs["commit"].keys()
+            and "date" in commit_diffs["commit"]["author"].keys()
+        ):
+            commit_timestamp = commit_diffs["commit"]["author"]["date"]
+        if commit_timestamp is not None:
+            commit_instance["timestamp"] = commit_timestamp
         if "files" not in commit_diffs.keys():
             continue
         for file in commit_diffs["files"]:
@@ -129,11 +107,10 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
                 patch = file["patch"]
                 diff_data = categorize_change(patch, filetype, specification)
                 if diff_data is not None:
-                    if commit_timestamp is not None:
-                        diff_data["timestamp"] = commit_timestamp
-                    commit_list.append(diff_data)
+                    commit_instance["patches"].append(diff_data)
+        if len(commit_instance["patches"]) > 0:
+            commit_list.append(commit_instance)
     return commit_list
-                
                 
 
 def get_commit_data(document, specification):
@@ -148,21 +125,25 @@ def get_commit_data(document, specification):
 
 
 def main():
-    gen_doc_indexes()
-    document_count = db.count_documents()
-    for document, specification in tqdm(
-    db.get_all_documents(),
-    desc="Analyzing documents",
-    total=document_count,
-    unit="documents",
-    ):
-        
-        if document["_id"] in ids[specification]:
-            collection = db.db.get_collection(specification)
-            result = get_commit_data(document, specification)
-            if result is not None:
-                if len(result) > 0:
-                    collection.update_one({"_id": document["_id"]}, {"$set": {"commit_diffs": result}})
+    database = vexDB()
+    collections = database.get_collections()
+    for collection in collections:
+        documents = database.retrieve_collection_data(collection)
+        documents = list(documents)
+        sample_size = min(400, len(documents))
+        sample = random.sample(documents, sample_size)
+        for document in tqdm(
+            sample,
+            desc=f"{collection}",
+            total=len(sample),
+            unit="documents"
+        ):
+            result = get_commit_data(document, collection)
+            if result and len(result) > 0:
+                collection = database.db.get_collection(collection)
+                collection.update_one(
+                    {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
+                )
 
 
 if __name__ == "__main__":
