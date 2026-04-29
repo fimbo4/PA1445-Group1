@@ -11,7 +11,7 @@ from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
-from analysis.Vulnerability import vulnerabilities_analysis
+from analysis.Vulnerability import vulnerabilities_analysis, vulnerabilities_plots
 from analysis.Vulnerability_database import database_analysis
 from database import vexDB
 from lxml import etree
@@ -87,7 +87,8 @@ def main() -> None:
         "SPDX": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
-    vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
+    # vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
+    vulnerabilities = []
     lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
     databases = deepcopy(empty_dict)
     statuses = deepcopy(tools)
@@ -222,16 +223,16 @@ def main() -> None:
                 document=document, specification=specification, buckets=repos
             )
 
-    if args.vulnerabilities or args.all:
-        for key in vulnerabilities.keys():
-            v_median = median(vulnerabilities[key])
-            v_mode = mode(vulnerabilities[key])
-            v_mean = mean(vulnerabilities[key])
-            v_median_non_zero = median(
-                [val for val in vulnerabilities[key] if val != 0]
-            )
-            v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
-            v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
+    # if args.vulnerabilities or args.all:
+    #     for key in vulnerabilities.keys():
+    #         v_median = median(vulnerabilities[key])
+    #         v_mode = mode(vulnerabilities[key])
+    #         v_mean = mean(vulnerabilities[key])
+    #         v_median_non_zero = median(
+    #             [val for val in vulnerabilities[key] if val != 0]
+    #         )
+    #         v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
+    #         v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
     if args.plots:
         file_counts = database.get_documents_per_collections()
         current_path = Path(__file__).parent
@@ -239,6 +240,10 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        elif args.vulnerabilities or args.all:
+            folder = current_path / "results/vulnerabilities"
+            folder.mkdir(parents=True, exist_ok=True)
+            vulnerabilities_plots(vulnerabilites=vulnerabilities, vulnerabilites_counter=lacks_vulnerabilities, file_count=file_counts, folder=folder)
     pass
 
 
