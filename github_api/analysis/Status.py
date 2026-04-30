@@ -2,8 +2,8 @@ from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 
-from lxml import etree
 import pandas as pd
+from lxml import etree
 
 from .extentions import Extentions
 
@@ -277,7 +277,7 @@ def status_analysis(
 def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     file_names = []
     content = []
-    
+
     # Percentage of statuses
     status_count = {}
     for specification in buckets:
@@ -294,7 +294,7 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             position_float="centering",
-            label="Tools proportion",
+            label="tab:Status proportion",
             caption="Table detailing the proportion of files where a status was found",
             hrules=True,
         )
@@ -311,7 +311,7 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="statuses",
+            label="tab:Statuses",
             caption="Table showing how many of each status was found per specification",
             hrules=True,
         )
