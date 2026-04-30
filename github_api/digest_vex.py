@@ -11,6 +11,8 @@ from analysis.Repository import repository_analysis
 from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
+from analysis.Vulnerability import vulnerabilities_analysis
+from analysis.Vulnerability_database import database_analysis, database_tables
 from analysis.Vulnerability import (vulnerabilities_analysis,
                                     vulnerabilities_plots)
 from analysis.Vulnerability_database import database_analysis
@@ -231,6 +233,10 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        elif args.databases or args.all:
+            folder = current_path / "results/databases"
+            folder.mkdir(parents=True, exist_ok=True)
+            database_tables(buckets=databases, file_count=file_counts, folder=folder)
         elif args.vulnerabilities or args.all:
             folder = current_path / "results/vulnerabilities"
             folder.mkdir(parents=True, exist_ok=True)
