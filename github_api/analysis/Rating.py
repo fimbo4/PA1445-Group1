@@ -1,10 +1,12 @@
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 from lxml import etree
 
 from .extentions import Extentions
-from pathlib import Path
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
+
 
 def ratings_analysis(
     vex, extention: Extentions, specification: str, table: list, counter: dict
@@ -27,31 +29,31 @@ def ratings_analysis(
             for vulnerability in vex["vulnerabilities"]:
                 if "scores" in vulnerability.keys():
                     methods = [
-                            "cvss_v2",
-                            "cvss_v3",
-                        ]
+                        "cvss_v2",
+                        "cvss_v3",
+                    ]
                     for item in vulnerability["scores"]:
                         for method in item.keys():
-                            if (method in methods
-                                and "baseScore" in item[method].keys()):
-                                try: 
+                            if method in methods and "baseScore" in item[method].keys():
+                                try:
                                     score = float(item[method]["baseScore"])
                                 except Exception as err:
                                     continue
                                 found_rating = True
-                                table.append({
-                                    "score": score,
-                                    "specification": specification,
-                                    "method": method,
-                                })
+                                table.append(
+                                    {
+                                        "score": score,
+                                        "specification": specification,
+                                        "method": method,
+                                    }
+                                )
 
         elif specification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
                 if type(vulnerability) == dict and "ratings" in vulnerability.keys():
                     for item in vulnerability["ratings"]:
                         if "method" in item.keys():
-                            if (item["method"] == "other"
-                                and "source" in item.keys()):
+                            if item["method"] == "other" and "source" in item.keys():
                                 method = item["source"]["name"]
                             else:
                                 method = item["method"]
@@ -65,11 +67,13 @@ def ratings_analysis(
                                 except Exception as err:
                                     continue
                             found_rating = True
-                            table.append({
+                            table.append(
+                                {
                                     "score": score,
                                     "specification": specification,
                                     "method": method,
-                            })
+                                }
+                            )
 
         elif specification == "SPDX" and "@graph" in vex.keys():
             relationships = [
@@ -88,11 +92,13 @@ def ratings_analysis(
                     except Exception as err:
                         continue
                     found_rating = True
-                    table.append({
-                        "score": score,
-                        "specification": specification,
-                        "method": entry["relationshipType"],
-                    })
+                    table.append(
+                        {
+                            "score": score,
+                            "specification": specification,
+                            "method": entry["relationshipType"],
+                        }
+                    )
 
     elif extention == Extentions.XML:
         if specification == "CycloneDX":
@@ -125,7 +131,7 @@ def ratings_analysis(
                                 except Exception as err:
                                     continue
                                 if method is not None:
-                                    if (method.text == "other"):
+                                    if method.text == "other":
                                         source = rating.find(
                                             f"{f"{key}:" if key else ""}source",
                                             namespaces=vex.nsmap,
@@ -150,20 +156,23 @@ def ratings_analysis(
                                         except Exception as err:
                                             continue
                                     found_rating = True
-                                    table.append({
+                                    table.append(
+                                        {
                                             "score": score,
                                             "specification": specification,
                                             "method": name,
-                                    })
+                                        }
+                                    )
 
     if found_rating:
         counter[specification] += 1
     return table
 
+
 def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> None:
     file_names = []
     content = []
-    
+
     rating_percentage = {}
     for specification in counter.keys():
         rating_percentage[specification] = {
@@ -179,8 +188,8 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     content.append(
         styler.to_latex(
             position_float="centering",
-            label="Rating proportion",
-            caption="Table detailing the proportion of files that included some for of rating",
+            label="tab:Rating proportion",
+            caption="Table detailing the proportion of files that included some form of rating",
             hrules=True,
         )
     )
@@ -194,7 +203,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
         elif row["method"] in ["CVSSv4", "cvss_v4"]:
             row["method"] = "CVSS v4"
     ratings = pd.DataFrame(table)
-    
+
     # Raw Rating's distribution
     figure, axes = plt.subplots()
     plot = sns.histplot(
@@ -208,7 +217,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     plt.title("Rating distribution")
     figure.savefig(folder / "rating_historgram.svg", bbox_inches="tight")
 
-    # Normalized data 
+    # Normalized data
     figure, axes = plt.subplots()
     plot = sns.histplot(
         data=ratings,
@@ -217,7 +226,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
         # multiple="stack",
         stat="percent",
         common_norm=False,
-        element="step"
+        element="step",
     )
     sns.move_legend(plot, loc="upper left", bbox_to_anchor=(1, 1))
     plt.xlabel("Severity")
