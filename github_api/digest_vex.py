@@ -6,7 +6,7 @@ from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
-from analysis.Rating import ratings_analysis
+from analysis.Rating import rating_plots, ratings_analysis
 from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
@@ -91,19 +91,8 @@ def main() -> None:
     lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
     databases = deepcopy(empty_dict)
     statuses = deepcopy(tools)
-    suported_ratings = {
-        "CVSS": {"2": 0, "3": 0, "4": 0},
-        "OWASP": 0,
-        "other": [],
-        "ratings": [],
-        "count": 0,
-    }
-    ratings = {
-        "OpenVEX": deepcopy(suported_ratings),
-        "CSAF": deepcopy(suported_ratings),
-        "CycloneDX": deepcopy(suported_ratings),
-        "SPDX": deepcopy(suported_ratings),
-    }
+    ratings = []
+    ratings_counter = {"CSAF": 0, "CycloneDX": 0, "OpenVEX": 0, "SPDX": 0}
     repos = deepcopy(tools)
 
     database = vexDB()
@@ -214,7 +203,8 @@ def main() -> None:
                 vex=vex,
                 extention=extention,
                 specification=specification,
-                buckets=ratings,
+                table=ratings,
+                counter=ratings_counter,
             )
 
         if args.repo or args.all:
@@ -239,6 +229,12 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
+        if args.rating or args.all:
+            folder = current_path / "results/ratings"
+            folder.mkdir(parents=True, exist_ok=True)
+            rating_plots(
+                ratings, ratings_counter, file_count=file_counts, folder=folder
+            )
     pass
 
 

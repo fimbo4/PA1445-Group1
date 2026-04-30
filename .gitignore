@@ -7,3 +7,4 @@ vex_files/
 *.ct
 *.xml
 dump
+github_api/results
