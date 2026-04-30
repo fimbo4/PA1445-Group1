@@ -1,6 +1,8 @@
 from collections import defaultdict
 from enum import Enum
+from pathlib import Path
 
+import pandas as pd
 from lxml import etree
 
 from .extentions import Extentions
@@ -270,3 +272,54 @@ def status_analysis(
     if found_status:
         buckets[specification]["count"] += 1
     return buckets
+
+
+def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
+    file_names = []
+    content = []
+
+    # Percentage of statuses
+    status_count = {}
+    for specification in buckets:
+        status_count[specification] = {
+            "count": buckets[specification]["count"],
+            "percentage": buckets[specification]["count"] / file_count[specification],
+        }
+    status_count_df = pd.DataFrame(data=status_count)
+    status_count_df = status_count_df.transpose()
+    styler = status_count_df.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("count_status.tex")
+    content.append(
+        styler.to_latex(
+            position_float="centering",
+            label="tab:Status proportion",
+            caption="Table detailing the proportion of files where a status was found",
+            hrules=True,
+        )
+    )
+
+    statuses = pd.DataFrame(buckets)
+    statuses.drop(labels=["count"], axis="index", inplace=True)
+    statuses.fillna(value=0, inplace=True)
+    styler = statuses.style.format(
+        precision=2, decimal=",", thousands=" ", escape="latex"
+    )
+    file_names.append("statuses.tex")
+    content.append(
+        styler.to_latex(
+            environment="longtable",
+            column_format="p{10cm}r",
+            label="tab:Statuses",
+            caption="Table showing how many of each status was found per specification",
+            hrules=True,
+        )
+    )
+
+    for file_name, content in zip(file_names, content):
+        filepath = folder / file_name
+        if not filepath.exists():
+            filepath.touch()
+        with filepath.open("w", encoding="utf-8") as file:
+            file.write(content)
