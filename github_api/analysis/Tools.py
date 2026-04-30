@@ -94,7 +94,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             position_float="centering",
-            label="tab:Tools proportion",
+            label="Tools proportion",
             caption="Table detailing the proportion of files generated with a tool",
             hrules=True,
         )
@@ -103,7 +103,6 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     tools = pd.DataFrame(buckets)
     CycloneDX_tools = tools.dropna(subset=["CycloneDX"])
     CycloneDX_tools.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
-    CycloneDX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = CycloneDX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -112,7 +111,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="tab:CycloneDX tools",
+            label="CycloneDX_tools",
             caption="Table naming all the tools used in CycloneDX files",
             hrules=True,
         )
@@ -120,7 +119,6 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     CSAF_tools = tools.dropna(subset=["CSAF"])
     CSAF_tools.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
-    CSAF_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = CSAF_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -129,7 +127,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="tab:CSAF tools",
+            label="CSAF_tools",
             caption="Table naming all the tools used in CSAF files",
             hrules=True,
         )
@@ -137,7 +135,6 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     OpenVEX_tools = tools.dropna(subset=["OpenVEX"])
     OpenVEX_tools.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
-    OpenVEX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = OpenVEX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -146,7 +143,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="tab:OpenVEX tools",
+            label="OpenVEX_tools",
             caption="Table naming all the tools used in OpenVEX files",
             hrules=True,
         )
@@ -154,7 +151,6 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     SPDX_tools = tools.dropna(subset=["SPDX"])
     SPDX_tools.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
-    SPDX_tools.drop(labels=["count"], axis="index", inplace=True)
     styler = SPDX_tools.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
@@ -163,7 +159,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="tab:SPDX tools",
+            label="SPDX_tools",
             caption="Table naming all the tools used in SPDX files",
             hrules=True,
         )
