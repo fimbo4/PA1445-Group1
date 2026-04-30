@@ -11,7 +11,8 @@ from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
-from analysis.Vulnerability import vulnerabilities_analysis, vulnerabilities_plots
+from analysis.Vulnerability import (vulnerabilities_analysis,
+                                    vulnerabilities_plots)
 from analysis.Vulnerability_database import database_analysis
 from database import vexDB
 from lxml import etree
@@ -243,7 +244,12 @@ def main() -> None:
         elif args.vulnerabilities or args.all:
             folder = current_path / "results/vulnerabilities"
             folder.mkdir(parents=True, exist_ok=True)
-            vulnerabilities_plots(vulnerabilites=vulnerabilities, vulnerabilites_counter=lacks_vulnerabilities, file_count=file_counts, folder=folder)
+            vulnerabilities_plots(
+                vulnerabilites=vulnerabilities,
+                vulnerabilites_counter=lacks_vulnerabilities,
+                file_count=file_counts,
+                folder=folder,
+            )
     pass
 
 
