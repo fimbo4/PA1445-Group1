@@ -76,8 +76,8 @@ def specification_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             position_float="centering",
-            label="Tools proportion",
-            caption="Table detailing the proportion of files generated with a tool",
+            label="tab:Specification proportion",
+            caption="Table detailing the proportion of files in which we found a version number",
             hrules=True,
         )
     )
@@ -93,7 +93,7 @@ def specification_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="SPDX_tools",
+            label="tab:Specification versions",
             caption="Table showing the different versions that were found for the specifications",
             hrules=True,
         )
