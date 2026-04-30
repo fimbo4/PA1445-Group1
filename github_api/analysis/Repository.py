@@ -38,7 +38,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="CSAF repos",
+            label="tab:CSAF repos",
             caption="Table naming repositories with CSAF files",
             hrules=True,
         )
@@ -55,7 +55,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="CycloneDX repos",
+            label="tab:CycloneDX repos",
             caption="Table naming repositories with CycloneDX files",
             hrules=True,
         )
@@ -72,7 +72,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="OpenVEX repos",
+            label="tab:OpenVEX repos",
             caption="Table naming repositories with OpenVEX files",
             hrules=True,
         )
@@ -89,7 +89,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="SPDX repos",
+            label="tab:SPDX repos",
             caption="Table naming repositories with SPDX files",
             hrules=True,
         )
