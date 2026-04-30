@@ -6,12 +6,17 @@ from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
-from analysis.Rating import ratings_analysis
+from analysis.Rating import rating_plots, ratings_analysis
 from analysis.Repository import repository_analysis
 from analysis.Specification import spesification_analysis
 from analysis.Status import status_analysis, status_tables
+from analysis.Specification import specification_analysis, specification_tables
+from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
+from analysis.Vulnerability_database import database_analysis, database_tables
+from analysis.Vulnerability import (vulnerabilities_analysis,
+                                    vulnerabilities_plots)
 from analysis.Vulnerability_database import database_analysis
 from database import vexDB
 from lxml import etree
@@ -87,23 +92,13 @@ def main() -> None:
         "SPDX": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
-    vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
+    # vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
+    vulnerabilities = []
     lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
     databases = deepcopy(empty_dict)
     statuses = deepcopy(tools)
-    suported_ratings = {
-        "CVSS": {"2": 0, "3": 0, "4": 0},
-        "OWASP": 0,
-        "other": [],
-        "ratings": [],
-        "count": 0,
-    }
-    ratings = {
-        "OpenVEX": deepcopy(suported_ratings),
-        "CSAF": deepcopy(suported_ratings),
-        "CycloneDX": deepcopy(suported_ratings),
-        "SPDX": deepcopy(suported_ratings),
-    }
+    ratings = []
+    ratings_counter = {"CSAF": 0, "CycloneDX": 0, "OpenVEX": 0, "SPDX": 0}
     repos = deepcopy(tools)
 
     database = vexDB()
@@ -179,7 +174,7 @@ def main() -> None:
                 vex=vex, extention=extention, specification=specification, buckets=tools
             )
         if args.version or args.all:
-            versions = spesification_analysis(
+            versions = specification_analysis(
                 vex=vex,
                 extention=extention,
                 specification=specification,
@@ -214,7 +209,8 @@ def main() -> None:
                 vex=vex,
                 extention=extention,
                 specification=specification,
-                buckets=ratings,
+                table=ratings,
+                counter=ratings_counter,
             )
 
         if args.repo or args.all:
@@ -222,16 +218,16 @@ def main() -> None:
                 document=document, specification=specification, buckets=repos
             )
 
-    if args.vulnerabilities or args.all:
-        for key in vulnerabilities.keys():
-            v_median = median(vulnerabilities[key])
-            v_mode = mode(vulnerabilities[key])
-            v_mean = mean(vulnerabilities[key])
-            v_median_non_zero = median(
-                [val for val in vulnerabilities[key] if val != 0]
-            )
-            v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
-            v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
+    # if args.vulnerabilities or args.all:
+    #     for key in vulnerabilities.keys():
+    #         v_median = median(vulnerabilities[key])
+    #         v_mode = mode(vulnerabilities[key])
+    #         v_mean = mean(vulnerabilities[key])
+    #         v_median_non_zero = median(
+    #             [val for val in vulnerabilities[key] if val != 0]
+    #         )
+    #         v_mode_non_zero = mode([val for val in vulnerabilities[key] if val != 0])
+    #         v_mean_non_zero = mean([val for val in vulnerabilities[key] if val != 0])
     if args.plots:
         file_counts = database.get_documents_per_collections()
         current_path = Path(__file__).parent
@@ -243,6 +239,24 @@ def main() -> None:
             folder = current_path / "results/status"
             folder.mkdir(parents=True, exist_ok=True)
             status_tables(buckets=statuses, file_count=file_counts, folder=folder)
+        elif args.databases or args.all:
+            folder = current_path / "results/databases"
+            folder.mkdir(parents=True, exist_ok=True)
+            database_tables(buckets=databases, file_count=file_counts, folder=folder)
+        elif args.vulnerabilities or args.all:
+            folder = current_path / "results/vulnerabilities"
+            folder.mkdir(parents=True, exist_ok=True)
+            vulnerabilities_plots(
+                vulnerabilites=vulnerabilities,
+                vulnerabilites_counter=lacks_vulnerabilities,
+                file_count=file_counts,
+                folder=folder,
+        if args.rating or args.all:
+            folder = current_path / "results/ratings"
+            folder.mkdir(parents=True, exist_ok=True)
+            rating_plots(
+                ratings, ratings_counter, file_count=file_counts, folder=folder
+            )
     pass
 
 
