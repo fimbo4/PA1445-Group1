@@ -94,7 +94,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             position_float="centering",
-            label="Tools proportion",
+            label="tab:Tools proportion",
             caption="Table detailing the proportion of files generated with a tool",
             hrules=True,
         )
@@ -112,7 +112,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="CycloneDX_tools",
+            label="tab:CycloneDX tools",
             caption="Table naming all the tools used in CycloneDX files",
             hrules=True,
         )
@@ -129,7 +129,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="CSAF_tools",
+            label="tab:CSAF tools",
             caption="Table naming all the tools used in CSAF files",
             hrules=True,
         )
@@ -146,7 +146,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="OpenVEX_tools",
+            label="tab:OpenVEX tools",
             caption="Table naming all the tools used in OpenVEX files",
             hrules=True,
         )
@@ -163,7 +163,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
         styler.to_latex(
             environment="longtable",
             column_format="p{10cm}r",
-            label="SPDX_tools",
+            label="tab:SPDX tools",
             caption="Table naming all the tools used in SPDX files",
             hrules=True,
         )
