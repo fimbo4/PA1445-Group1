@@ -8,7 +8,7 @@ import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
 from analysis.Rating import rating_plots, ratings_analysis
 from analysis.Repository import repository_analysis
-from analysis.Specification import spesification_analysis
+from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis
 from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import vulnerabilities_analysis
@@ -168,7 +168,7 @@ def main() -> None:
                 vex=vex, extention=extention, specification=specification, buckets=tools
             )
         if args.version or args.all:
-            versions = spesification_analysis(
+            versions = specification_analysis(
                 vex=vex,
                 extention=extention,
                 specification=specification,
