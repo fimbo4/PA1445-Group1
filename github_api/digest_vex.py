@@ -2,20 +2,17 @@ import argparse
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
-from statistics import mean, median, mode
 
 import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
 from analysis.Rating import rating_plots, ratings_analysis
-from analysis.Repository import repository_analysis
+from analysis.Repository import repository_analysis, repository_tables
 from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis, status_tables
 from analysis.Tools import tools_analysis, tools_tables
-from analysis.Vulnerability import vulnerabilities_analysis
-from analysis.Vulnerability_database import database_analysis, database_tables
 from analysis.Vulnerability import (vulnerabilities_analysis,
                                     vulnerabilities_plots)
-from analysis.Vulnerability_database import database_analysis
+from analysis.Vulnerability_database import database_analysis, database_tables
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
@@ -233,15 +230,15 @@ def main() -> None:
             folder = current_path / "results/tools"
             folder.mkdir(parents=True, exist_ok=True)
             tools_tables(buckets=tools, file_count=file_counts, folder=folder)
-        elif args.status or args.all:
+        if args.status or args.all:
             folder = current_path / "results/status"
             folder.mkdir(parents=True, exist_ok=True)
             status_tables(buckets=statuses, file_count=file_counts, folder=folder)
-        elif args.databases or args.all:
+        if args.databases or args.all:
             folder = current_path / "results/databases"
             folder.mkdir(parents=True, exist_ok=True)
             database_tables(buckets=databases, file_count=file_counts, folder=folder)
-        elif args.vulnerabilities or args.all:
+        if args.vulnerabilities or args.all:
             folder = current_path / "results/vulnerabilities"
             folder.mkdir(parents=True, exist_ok=True)
             vulnerabilities_plots(
@@ -250,11 +247,21 @@ def main() -> None:
                 file_count=file_counts,
                 folder=folder,
             )
-        elif args.rating or args.all:
+        if args.rating or args.all:
             folder = current_path / "results/ratings"
             folder.mkdir(parents=True, exist_ok=True)
             rating_plots(
                 ratings, ratings_counter, file_count=file_counts, folder=folder
+            )
+        if args.repo or args.all:
+            folder = current_path / "results/repos"
+            folder.mkdir(parents=True, exist_ok=True)
+            repository_tables(buckets=repos, folder=folder)
+        if args.version or args.all:
+            folder = current_path / "results/specification"
+            folder.mkdir(parents=True, exist_ok=True)
+            specification_tables(
+                buckets=versions, file_count=file_counts, folder=folder
             )
     pass
 
