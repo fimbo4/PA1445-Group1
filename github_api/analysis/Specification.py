@@ -86,7 +86,7 @@ def specification_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     specifications.fillna(value=0, inplace=True)
     specifications.drop(labels=["count"], axis="index", inplace=True)
     styler = specifications.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("specifications.tex")
     content.append(
