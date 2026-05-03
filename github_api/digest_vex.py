@@ -13,6 +13,7 @@ from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import (vulnerabilities_analysis,
                                     vulnerabilities_plots)
 from analysis.Vulnerability_database import database_analysis, database_tables
+from analysis.Files import files_table
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
@@ -263,6 +264,10 @@ def main() -> None:
             specification_tables(
                 buckets=versions, file_count=file_counts, folder=folder
             )
+
+        folder = current_path / "results/files"
+        folder.mkdir(parents=True, exist_ok=True)
+        files_table(file_counts=file_counts, total_documents=document_count, folder=folder)
     pass
 
 
