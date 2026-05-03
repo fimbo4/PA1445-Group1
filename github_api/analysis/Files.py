@@ -21,7 +21,7 @@ def files_table(file_counts: dict, total_documents: int, folder: Path) -> None:
         "percentage": total_documents / total_documents,
     })
     files_df = pd.DataFrame(files)
-    files_df.reset_index(drop=True, inplace=True)
+    files_df.set_index("specification", inplace=True)
     styler = files_df.style.format(
         precision=2, decimal=",", thousands=" ", escape="latex"
     )
