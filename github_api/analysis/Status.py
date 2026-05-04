@@ -293,7 +293,8 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     file_names.append("count_status.tex")
     content.append(
         styler.to_latex(
-            position_float="centering",
+            environment="longtable",
+            column_format="p{10cm}r",
             label="tab:Status proportion",
             caption="Table detailing the proportion of files where a status was found",
             hrules=True,
@@ -310,7 +311,7 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             environment="longtable",
-            column_format="p{10cm}r",
+            column_format="lrrrr",
             label="tab:Statuses",
             caption="Table showing how many of each status was found per specification",
             hrules=True,
