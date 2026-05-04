@@ -104,6 +104,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     CycloneDX_tools = tools.dropna(subset=["CycloneDX"])
     CycloneDX_tools.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
     CycloneDX_tools.drop(labels=["count"], axis="index", inplace=True)
+    CycloneDX_tools.sort_values(by=["CycloneDX"], ascending=False, inplace=True)
     styler = CycloneDX_tools.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
     )
@@ -121,6 +122,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     CSAF_tools = tools.dropna(subset=["CSAF"])
     CSAF_tools.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
     CSAF_tools.drop(labels=["count"], axis="index", inplace=True)
+    CSAF_tools.sort_values(by=["CSAF"], ascending=False, inplace=True)
     styler = CSAF_tools.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
     )
@@ -138,6 +140,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     OpenVEX_tools = tools.dropna(subset=["OpenVEX"])
     OpenVEX_tools.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
     OpenVEX_tools.drop(labels=["count"], axis="index", inplace=True)
+    OpenVEX_tools.sort_values(by=["OpenVEX"], ascending=False, inplace=True)
     styler = OpenVEX_tools.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
     )
@@ -155,6 +158,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     SPDX_tools = tools.dropna(subset=["SPDX"])
     SPDX_tools.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
     SPDX_tools.drop(labels=["count"], axis="index", inplace=True)
+    SPDX_tools.sort_values(by=["SPDX"], ascending=False, inplace=True)
     styler = SPDX_tools.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
     )
