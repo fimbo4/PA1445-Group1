@@ -30,7 +30,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     CSAF_repos = repos.dropna(subset=["CSAF"])
     CSAF_repos.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
     styler = CSAF_repos.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("CSAF_repos.tex")
     content.append(
@@ -46,7 +46,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     CycloneDX_repos = repos.dropna(subset=["CycloneDX"])
     CycloneDX_repos.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
     styler = CycloneDX_repos.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("CycloneDX_repos.tex")
     content.append(
@@ -62,7 +62,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     OpenVEX_repos = repos.dropna(subset=["OpenVEX"])
     OpenVEX_repos.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
     styler = OpenVEX_repos.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("OpenVEX_repos.tex")
     content.append(
@@ -78,7 +78,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     SPDX_repos = repos.dropna(subset=["SPDX"])
     SPDX_repos.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
     styler = SPDX_repos.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("SPDX_repos.tex")
     content.append(

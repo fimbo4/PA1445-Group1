@@ -304,7 +304,7 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     statuses.drop(labels=["count"], axis="index", inplace=True)
     statuses.fillna(value=0, inplace=True)
     styler = statuses.style.format(
-        precision=2, decimal=",", thousands=" ", escape="latex"
+        precision=0, decimal=",", thousands=" ", escape="latex"
     )
     file_names.append("statuses.tex")
     content.append(
