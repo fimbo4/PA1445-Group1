@@ -37,7 +37,7 @@ class vexDB:
             "name": {"$regex": r"^(?!system\.)"}
         }  # Ignores the system collections
         collections = self.db.list_collection_names(filter=filter)
-        return collections
+        return sorted(collections)
 
     def get_documents_per_collections(self) -> dict:
         collections = self.get_collections()
