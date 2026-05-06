@@ -103,7 +103,7 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
         for file in commit_diffs["files"]:
             if "filename" not in file.keys():
                 continue
-            if filename in file["filename"]:
+            if filename == file["filename"]:
                 if "patch" not in file.keys():
                     continue
                 patch = file["patch"]
@@ -122,10 +122,10 @@ def get_commit_data(document, specification):
     if commit_data is not None:
         commit_data = commit_data.json()
     else:
-        return None
+        return None, None
     return get_commit_diffs(
-        commit_data, document["filename"], document["extension"], specification
-    )
+        commit_data, document["commit_url"].split("path=")[1], document["extension"], specification
+    ), len(commit_data)
 
 
 def main():
@@ -133,8 +133,14 @@ def main():
     collections = database.get_collections()
     for collection in collections:
         documents = database.retrieve_collection_data(collection)
+        if collection == "CSAF":
+            documents = [
+                document
+                for document in documents
+                if "aquasecurity" not in document["commit_url"]
+            ]
         documents = list(documents)
-        sample_size = min(400, len(documents))
+        sample_size = min(300, len(documents))
         sample = random.sample(documents, sample_size)
         for document in tqdm(
             sample,
@@ -142,12 +148,20 @@ def main():
             total=len(sample),
             unit="documents"
         ):
-            result = get_commit_data(document, collection)
-            if result and len(result) > 0:
-                collection = database.db.get_collection(collection)
-                collection.update_one(
-                    {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
-                )
+            try:
+                result, num_commits = get_commit_data(document, collection)
+                if result and len(result) > 0:
+                    dbcollection = database.db.get_collection(collection)
+                    dbcollection.update_one(
+                        {"_id": document["_id"]}, {"$set": {"commit_diffs": result}}
+                    )
+                if num_commits:
+                    dbcollection = database.db.get_collection(collection)
+                    dbcollection.update_one(
+                        {"_id": document["_id"]}, {"$set": {"commits_analyzed": num_commits}}
+                    )
+            except Exception as e:
+                print(e)
 
 
 if __name__ == "__main__":
