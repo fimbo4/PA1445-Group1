@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statistics import mean, median, mode
 import os
+import math
+import matplotlib.ticker as ticker
 
 
 dist_directory = "commit_analysis/distributions"
@@ -244,6 +246,7 @@ def main() -> None:
             bars = plt.bar(keys, values)
             plt.xlabel(f"Fields {type}")
             plt.ylabel("Frequency")
+            plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             plt.title(f"{spec} distribution of {type} fields")
             plt.tight_layout()
             filename = os.path.join(dist_directory, f"{spec}_distribution_{type}.png")
@@ -254,8 +257,8 @@ def main() -> None:
             bars = plt.barh(keynames, values)
             plt.xlabel(f"Frequency")
             plt.ylabel(f"Fields {type}")
+            plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             plt.bar_label(bars, fmt='%d')
-            plt.xlim(0, max(values) * 1.15)
             plt.title(f"{spec} top 10 fields {type}")
             plt.tight_layout()
             filename = os.path.join(top_directory, f"{spec}_top_{type}.png")
