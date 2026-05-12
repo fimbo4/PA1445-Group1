@@ -11,7 +11,8 @@ def files_table(file_counts: dict, repos: dict, total_documents: int, folder: Pa
     for specification in file_counts:
         if specification == "name":
             continue
-        repo = len(repos[specification].keys())
+        repo = len(repos[specification].keys()) - 1
+        # The "count" row in repos is not a repository
         repo_count += repo
         files.append({
             "specification": specification,
