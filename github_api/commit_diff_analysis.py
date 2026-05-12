@@ -247,6 +247,7 @@ def main() -> None:
             plt.xlabel(f"Fields {type}")
             plt.ylabel("Frequency")
             plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            plt.gca().yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             plt.title(f"{spec} distribution of {type} fields")
             plt.tight_layout()
             filename = os.path.join(dist_directory, f"{spec}_distribution_{type}.png")
