@@ -267,7 +267,7 @@ def main() -> None:
 
         folder = current_path / "results/files"
         folder.mkdir(parents=True, exist_ok=True)
-        files_table(file_counts=file_counts, total_documents=document_count, folder=folder)
+        files_table(file_counts=file_counts, repos=repos, total_documents=document_count, folder=folder)
     pass
 
 
