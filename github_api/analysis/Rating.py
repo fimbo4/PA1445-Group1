@@ -215,7 +215,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     plt.xlabel("Severity")
     plt.ylabel("Count")
     plt.title("Rating distribution")
-    figure.savefig(folder / "rating_historgram.svg", bbox_inches="tight")
+    figure.savefig(folder / "ratingHistorgram.svg", bbox_inches="tight")
 
     # Normalized data
     figure, axes = plt.subplots()
@@ -232,7 +232,7 @@ def rating_plots(table: list, counter: dict, file_count: dict, folder: Path) -> 
     plt.xlabel("Severity")
     plt.ylabel("Percent")
     plt.title("Rating distribution (normalized)")
-    figure.savefig(folder / "rating_historgram_normalized.svg", bbox_inches="tight")
+    figure.savefig(folder / "ratingHistorgramNormalized.svg", bbox_inches="tight")
 
     for file_name, content in zip(file_names, content):
         filepath = folder / file_name
