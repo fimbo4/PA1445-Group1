@@ -60,7 +60,7 @@ def input_arguments() -> argparse.Namespace:
         "-p",
         "--plots",
         action="store_true",
-        help="Creats plots for any analyses performed. Stored in the /plots folder",
+        help="Creats plots or tables for any analyses performed. Stored in the /results folder",
     )
     parser.add_argument(
         "-vuln",
@@ -71,7 +71,7 @@ def input_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--repo",
         action="store_true",
-        help="Analyses the mean mode and median for the number of vulnerabilities",
+        help="Analyses which repositores we have documents from",
     )
 
     args = parser.parse_args()
