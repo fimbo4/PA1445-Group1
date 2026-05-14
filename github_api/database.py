@@ -23,7 +23,7 @@ class vexDB:
 
     def retrieve_collection_data(self, collection: str) -> Generator[dict]:
         collection = self.db.get_collection(collection)
-        for item in collection.find():
+        for item in collection.find(no_cursor_timeout=True).sort("_id", 1):
             yield item
 
     def get_all_documents(self) -> Generator[(dict, str)]:
@@ -37,7 +37,7 @@ class vexDB:
             "name": {"$regex": r"^(?!system\.)"}
         }  # Ignores the system collections
         collections = self.db.list_collection_names(filter=filter)
-        return collections
+        return sorted(collections)
 
     def get_documents_per_collections(self) -> dict:
         collections = self.get_collections()
@@ -47,6 +47,9 @@ class vexDB:
                 filter={}
             )
         return counters
+
+    def get_collection_size(self, collection: str) -> int:
+        return self.db.get_collection(collection).count_documents(filter={})
 
     def count_documents(self) -> int:
         collections = self.get_collections()
