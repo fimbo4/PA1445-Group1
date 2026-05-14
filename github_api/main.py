@@ -319,7 +319,7 @@ def input_arguments() -> argparse.Namespace:
         "-hs",
         "--history",
         action="store_true",
-        help="Gets the commit hostory for every vex file",
+        help="Gets the commit history for every vex file",
     )
     parser.add_argument(
         "-db",

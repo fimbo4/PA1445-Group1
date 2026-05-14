@@ -1,4 +1,3 @@
-import math
 import os
 from statistics import mean, median, mode
 
