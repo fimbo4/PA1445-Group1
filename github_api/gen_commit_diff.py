@@ -81,9 +81,7 @@ def categorize_change(patch, filetype, specification):
 def get_commit_diffs(commit_data, filename, filetype, specification):
     commit_list = []
     for commit in commit_data:
-        commit_instance = {
-            "patches": []
-        }
+        commit_instance = {"patches": []}
         if commit is None:
             continue
         commit_diffs = retry_request(commit["url"])
@@ -91,7 +89,8 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
             continue
         commit_diffs = commit_diffs.json()
         commit_timestamp = None
-        if ("commit" in commit_diffs.keys()
+        if (
+            "commit" in commit_diffs.keys()
             and "author" in commit_diffs["commit"].keys()
             and "date" in commit_diffs["commit"]["author"].keys()
         ):
@@ -113,7 +112,7 @@ def get_commit_diffs(commit_data, filename, filetype, specification):
         if len(commit_instance["patches"]) > 0:
             commit_list.append(commit_instance)
     return commit_list
-                
+
 
 def get_commit_data(document, specification):
     if "commit_url" not in document.keys():
@@ -124,7 +123,10 @@ def get_commit_data(document, specification):
     else:
         return None, None
     return get_commit_diffs(
-        commit_data, document["commit_url"].split("path=")[1], document["extension"], specification
+        commit_data,
+        document["commit_url"].split("path=")[1],
+        document["extension"],
+        specification,
     ), len(commit_data)
 
 
@@ -143,10 +145,7 @@ def main():
         sample_size = min(300, len(documents))
         sample = random.sample(documents, sample_size)
         for document in tqdm(
-            sample,
-            desc=f"{collection}",
-            total=len(sample),
-            unit="documents"
+            sample, desc=f"{collection}", total=len(sample), unit="documents"
         ):
             try:
                 result, num_commits = get_commit_data(document, collection)
@@ -158,7 +157,8 @@ def main():
                 if num_commits:
                     dbcollection = database.db.get_collection(collection)
                     dbcollection.update_one(
-                        {"_id": document["_id"]}, {"$set": {"commits_analyzed": num_commits}}
+                        {"_id": document["_id"]},
+                        {"$set": {"commits_analyzed": num_commits}},
                     )
             except Exception as e:
                 print(e)

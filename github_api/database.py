@@ -43,9 +43,11 @@ class vexDB:
         collections = self.get_collections()
         counters = dict(name=collections)
         for collection in collections:
-            counters[collection] = self.db.get_collection(collection).count_documents(filter={})
+            counters[collection] = self.db.get_collection(collection).count_documents(
+                filter={}
+            )
         return counters
-    
+
     def get_collection_size(self, collection: str) -> int:
         return self.db.get_collection(collection).count_documents(filter={})
 
