@@ -1,7 +1,11 @@
-import pandas as pd
 from pathlib import Path
 
-def files_table(file_counts: dict, repos: dict, total_documents: int, folder: Path) -> None:
+import pandas as pd
+
+
+def files_table(
+    file_counts: dict, repos: dict, total_documents: int, folder: Path
+) -> None:
     file_names = []
     content = []
 
@@ -14,19 +18,23 @@ def files_table(file_counts: dict, repos: dict, total_documents: int, folder: Pa
         repo = len(repos[specification].keys()) - 1
         # The "count" row in repos is not a repository
         repo_count += repo
-        files.append({
-            "specification": specification,
-            "count": file_counts[specification],
-            "percentage": file_counts[specification] / total_documents,
-            "repositories": repo,
-        })
+        files.append(
+            {
+                "specification": specification,
+                "count": file_counts[specification],
+                "percentage": file_counts[specification] / total_documents,
+                "repositories": repo,
+            }
+        )
     files = sorted(files, key=lambda d: d["count"], reverse=True)
-    files.append({
-        "specification": "Total",
-        "count": total_documents,
-        "percentage": total_documents / total_documents,
-        "repositories": repo_count,
-    })
+    files.append(
+        {
+            "specification": "Total",
+            "count": total_documents,
+            "percentage": total_documents / total_documents,
+            "repositories": repo_count,
+        }
+    )
     files_df = pd.DataFrame(files)
     files_df.set_index("specification", inplace=True)
     styler = files_df.style.format(
@@ -42,7 +50,7 @@ def files_table(file_counts: dict, repos: dict, total_documents: int, folder: Pa
             hrules=True,
         )
     )
-    
+
     for file_name, content in zip(file_names, content):
         filepath = folder / file_name
         if not filepath.exists():
