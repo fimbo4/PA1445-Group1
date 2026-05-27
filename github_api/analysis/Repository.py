@@ -2,6 +2,15 @@ from pathlib import Path
 
 import pandas as pd
 
+def redhat_check(document) -> bool:
+    commit_url = document["commit_url"]
+    repo = commit_url.split("repos/")
+    repo = repo[1].split("/", 2)[0] + "/" + repo[1].split("/", 2)[1]
+    if repo == "aquasecurity/vuln-list-redhat":
+        return True
+    else:
+        return False
+
 
 def repository_analysis(document, specification: str, buckets: dict) -> dict:
     """

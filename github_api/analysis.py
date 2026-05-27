@@ -7,7 +7,7 @@ import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
 from analysis.Files import files_table
 from analysis.Rating import rating_plots, ratings_analysis
-from analysis.Repository import repository_analysis, repository_tables
+from analysis.Repository import repository_analysis, repository_tables, redhat_check
 from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis, status_tables
 from analysis.Tools import tools_analysis, tools_tables
@@ -164,6 +164,7 @@ def main() -> None:
             # Skipped because it is a list:
             # ObjectId('69c3a073c28f54bef1261f81') - The GitHub list
 
+        is_from_redhat = redhat_check(document=document)
         # Analysis
         if args.tools or args.all:
             tools = tools_analysis(
