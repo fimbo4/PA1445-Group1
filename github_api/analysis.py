@@ -7,7 +7,8 @@ import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
 from analysis.Files import files_table
 from analysis.Rating import rating_plots, ratings_analysis
-from analysis.Repository import repository_analysis, repository_tables, redhat_check
+from analysis.Repository import (redhat_check, repository_analysis,
+                                 repository_tables)
 from analysis.Specification import specification_analysis, specification_tables
 from analysis.Status import status_analysis, status_tables
 from analysis.Tools import tools_analysis, tools_tables
@@ -87,7 +88,7 @@ def main() -> None:
         "CycloneDX": deepcopy(empty_dict),
         "SPDX": deepcopy(empty_dict),
         "CSAF-Redhat": deepcopy(empty_dict),
-        "CSAF-Non-Redhat": deepcopy(empty_dict)
+        "CSAF-Non-Redhat": deepcopy(empty_dict),
     }
     versions = deepcopy(tools)
     # vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
@@ -170,7 +171,11 @@ def main() -> None:
         # Analysis
         if args.tools or args.all:
             tools = tools_analysis(
-                vex=vex, extention=extention, specification=specification, buckets=tools, redhat=is_from_redhat,
+                vex=vex,
+                extention=extention,
+                specification=specification,
+                buckets=tools,
+                redhat=is_from_redhat,
             )
         if args.version or args.all:
             versions = specification_analysis(
@@ -186,6 +191,7 @@ def main() -> None:
                 specification=specification,
                 vulnerabilities=vulnerabilities,
                 lacks_vulnerabilities=lacks_vulnerabilities,
+                redhat=is_from_redhat,
             )
 
         if args.databases or args.all:
@@ -246,7 +252,7 @@ def main() -> None:
             folder = current_path / "results/vulnerabilities"
             folder.mkdir(parents=True, exist_ok=True)
             vulnerabilities_plots(
-                vulnerabilites=vulnerabilities,
+                vulnerabilities=vulnerabilities,
                 vulnerabilites_counter=lacks_vulnerabilities,
                 file_count=file_counts,
                 folder=folder,
