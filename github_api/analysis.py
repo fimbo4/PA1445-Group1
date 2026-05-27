@@ -86,6 +86,8 @@ def main() -> None:
         "CSAF": deepcopy(empty_dict),
         "CycloneDX": deepcopy(empty_dict),
         "SPDX": deepcopy(empty_dict),
+        "CSAF-Redhat": deepcopy(empty_dict),
+        "CSAF-Non-Redhat": deepcopy(empty_dict)
     }
     versions = deepcopy(tools)
     # vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
@@ -168,7 +170,7 @@ def main() -> None:
         # Analysis
         if args.tools or args.all:
             tools = tools_analysis(
-                vex=vex, extention=extention, specification=specification, buckets=tools
+                vex=vex, extention=extention, specification=specification, buckets=tools, redhat=is_from_redhat,
             )
         if args.version or args.all:
             versions = specification_analysis(
