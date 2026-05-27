@@ -5,6 +5,7 @@ from pathlib import Path
 
 import jsonc  # Helps with parsing illegal Json
 from analysis.extentions import Extentions
+from analysis.Files import files_table
 from analysis.Rating import rating_plots, ratings_analysis
 from analysis.Repository import repository_analysis, repository_tables
 from analysis.Specification import specification_analysis, specification_tables
@@ -13,7 +14,6 @@ from analysis.Tools import tools_analysis, tools_tables
 from analysis.Vulnerability import (vulnerabilities_analysis,
                                     vulnerabilities_plots)
 from analysis.Vulnerability_database import database_analysis, database_tables
-from analysis.Files import files_table
 from database import vexDB
 from lxml import etree
 from tqdm import tqdm
@@ -60,7 +60,7 @@ def input_arguments() -> argparse.Namespace:
         "-p",
         "--plots",
         action="store_true",
-        help="Creats plots for any analyses performed. Stored in the /plots folder",
+        help="Creats plots or tables for any analyses performed. Stored in the /results folder",
     )
     parser.add_argument(
         "-vuln",
@@ -71,7 +71,7 @@ def input_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--repo",
         action="store_true",
-        help="Analyses the mean mode and median for the number of vulnerabilities",
+        help="Analyses which repositores we have documents from",
     )
 
     args = parser.parse_args()
@@ -267,7 +267,12 @@ def main() -> None:
 
         folder = current_path / "results/files"
         folder.mkdir(parents=True, exist_ok=True)
-        files_table(file_counts=file_counts, repos=repos, total_documents=document_count, folder=folder)
+        files_table(
+            file_counts=file_counts,
+            repos=repos,
+            total_documents=document_count,
+            folder=folder,
+        )
     pass
 
 

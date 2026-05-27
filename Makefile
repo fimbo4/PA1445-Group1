@@ -7,8 +7,19 @@ installMongodbTools:	## Installs Mongodb tools
 	sudo chmod +x install_MongoDB_Tools.sh
 	./install_MongoDB_Tools.sh
 
-run: ## This will create and start the containers for both the database and the main api script
-	docker-compose up
+createVEXData: ## Clears the database and get's new data from GitHub
+	python3 github_api/main.py --clear-database --database --history
+
+createCommitData: ## Updates the current dabase with information about commits
+	python3 github_api/gen_commit_diff.py
+
+analysisFull: analysisVEX analysisCommits ## Runs all the analysis
+
+analysisVEX: ## Generates tables and polts of the vex content
+	python3 github_api/analysis.py --all --plots
+
+analysisCommits: ## Analyses the commits
+	python3 github_api/commit_diff_analysis.py
 
 lint: ## Uses black and isort to lint github_api
 	python -m black github_api/
