@@ -40,7 +40,7 @@ class Status(int, Enum):
 
 
 def status_analysis(
-    vex, extention: Extentions, specification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict, redhat: bool
 ) -> dict:
     """
     Extracts the status of the vulnerability and count the occurences
@@ -169,6 +169,10 @@ def status_analysis(
                         for product, affects in final_products_properties.items():
                             found_status = True
                             buckets[specification][affects.label] += 1
+                            if redhat:
+                                buckets["CSAF-Redhat"][affects.label] += 1
+                            else:
+                                buckets["CSAF-Non-Redhat"][affects.label] += 1
 
         elif specification == "CycloneDX" and "vulnerabilities" in vex.keys():
             for vulnerability in vex["vulnerabilities"]:
@@ -281,6 +285,8 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     # Percentage of statuses
     status_count = {}
     for specification in buckets:
+        if specification in ["CSAF-Redhat", "CSAF-Non-Redhat"]:
+            continue
         status_count[specification] = {
             "count": buckets[specification]["count"],
             "percentage": buckets[specification]["count"] / file_count[specification],
@@ -311,7 +317,7 @@ def status_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             environment="longtable",
-            column_format="lrrrr",
+            column_format="lrrrrrr",
             label="tab:Statuses",
             caption="Table showing how many of each status was found per specification",
             hrules=True,

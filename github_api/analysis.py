@@ -207,6 +207,7 @@ def main() -> None:
                 extention=extention,
                 specification=specification,
                 buckets=statuses,
+                redhat=is_from_redhat,
             )
 
         if args.rating or args.all:
