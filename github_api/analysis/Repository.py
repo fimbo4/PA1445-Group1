@@ -39,7 +39,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     repos = pd.DataFrame(buckets)
     CSAF_repos = repos.dropna(subset=["CSAF"])
     CSAF_repos.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
-    CSAF_repos.fillna(0)
+    CSAF_repos.fillna(value=0, inplace=True)
     CSAF_repos.sort_values(by=["CSAF"], ascending=False, inplace=True)
     styler = CSAF_repos.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"

@@ -49,7 +49,8 @@ def status_analysis(
     vex - the Vex file
     extention - the extention of the vex file, this is so we can handle both json and xml
     specification - the specification of the current Vex file
-    buckets - the datastructure we add the databases to
+    buckets - the datastructure we add the databases to'
+    redhat - check for if the vex is from "aquasecurity/vuln-list-redhat", assumes only CSAF files are from there
 
     Returns
     buckets
