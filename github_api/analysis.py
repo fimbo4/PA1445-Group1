@@ -90,7 +90,12 @@ def main() -> None:
         "CSAF-Redhat": deepcopy(empty_dict),
         "CSAF-Non-Redhat": deepcopy(empty_dict),
     }
-    versions = deepcopy(tools)
+    versions = {
+        "OpenVEX": deepcopy(empty_dict),
+        "CSAF": deepcopy(empty_dict),
+        "CycloneDX": deepcopy(empty_dict),
+        "SPDX": deepcopy(empty_dict),
+    }
     # vulnerabilities = {"OpenVEX": [], "CSAF": [], "CycloneDX": [], "SPDX": []}
     vulnerabilities = []
     lacks_vulnerabilities = {"OpenVEX": 0, "CSAF": 0, "CycloneDX": 0, "SPDX": 0}
