@@ -120,30 +120,28 @@ def main() -> None:
     field_change_list = {}
 
     document_count = db.count_documents()
-
+    num_commits = 0
     for document, specification in tqdm(
         db.get_all_documents(),
         desc="Analyzing documents",
         total=document_count,
         unit="documents",
     ):
+        if "commits_analyzed" in document.keys():
+            commits_analyzed[specification] += document["commits_analyzed"]
 
-        if (
-            "aquasecurity" not in document["commit_url"]
-            and "schema" not in document["filename"]
-        ):
-            if "commits_analyzed" in document.keys():
-                commits_analyzed[specification] += document["commits_analyzed"]
+        if "commit_diffs" in document.keys():
+            commits_kept[specification] += len(document["commit_diffs"])
+            num_commits += len(document["commit_diffs"])
+            update_total_changes(document, specification, total_changes)
+            update_field_changes(document, specification, field_change_list)
+            update_total_timediffs(document, specification, total_timediff)
+            update_commit_sizes(document, specification, commit_sizes)
 
-            if "commit_diffs" in document.keys():
-                commits_kept[specification] += len(document["commit_diffs"])
-                update_total_changes(document, specification, total_changes)
-                update_field_changes(document, specification, field_change_list)
-                update_total_timediffs(document, specification, total_timediff)
-                update_commit_sizes(document, specification, commit_sizes)
+    print(num_commits)
 
     total_commits = pd.DataFrame(commits_analyzed, index=["Commits Analysed"]).to_latex(
-        longtable=True, caption="Commits Analyzed", label="commits_analyzed"
+        longtable=True, caption="Commits Analysed", label="commits_analyzed"
     )
 
     file = os.path.join("commit_analysis/commits_analysed.tex")
@@ -252,8 +250,8 @@ def main() -> None:
             plt.gca().yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             plt.title(f"{spec} distribution of {type} fields")
             plt.tight_layout()
-            filename = os.path.join(dist_directory, f"{spec}_distribution_{type}.png")
-            plt.savefig(filename)
+            filename = os.path.join(dist_directory, f"{spec}_distribution_{type}.svg")
+            plt.savefig(filename, format="svg")
             plt.close()
             keynames = keynames[:10]
             values = values[:10]
@@ -261,11 +259,12 @@ def main() -> None:
             plt.xlabel(f"Frequency")
             plt.ylabel(f"Fields {type}")
             plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            plt.xlim(0, max(values) * 1.1)
             plt.bar_label(bars, fmt="%d")
             plt.title(f"{spec} top 10 fields {type}")
             plt.tight_layout()
-            filename = os.path.join(top_directory, f"{spec}_top_{type}.png")
-            plt.savefig(filename)
+            filename = os.path.join(top_directory, f"{spec}_top_{type}.svg")
+            plt.savefig(filename, format="svg")
             plt.close()
 
     field_change_tex = ""
