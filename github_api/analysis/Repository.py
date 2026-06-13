@@ -3,6 +3,16 @@ from pathlib import Path
 import pandas as pd
 
 
+def redhat_check(document) -> bool:
+    commit_url = document["commit_url"]
+    repo = commit_url.split("repos/")
+    repo = repo[1].split("/", 2)[0] + "/" + repo[1].split("/", 2)[1]
+    if repo == "aquasecurity/vuln-list-redhat":
+        return True
+    else:
+        return False
+
+
 def repository_analysis(document, specification: str, buckets: dict) -> dict:
     """
     Extracts the repository the file comes from
@@ -29,6 +39,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     repos = pd.DataFrame(buckets)
     CSAF_repos = repos.dropna(subset=["CSAF"])
     CSAF_repos.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
+    CSAF_repos.fillna(value=0, inplace=True)
     CSAF_repos.sort_values(by=["CSAF"], ascending=False, inplace=True)
     styler = CSAF_repos.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
@@ -37,7 +48,7 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             environment="longtable",
-            column_format="p{10cm}r",
+            column_format="p{10cm}rrr",
             label="tab:CSAF repos",
             caption="Table naming repositories with CSAF files",
             hrules=True,
@@ -45,7 +56,10 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     )
 
     CycloneDX_repos = repos.dropna(subset=["CycloneDX"])
-    CycloneDX_repos.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
+    CycloneDX_repos.drop(
+        columns=["SPDX", "OpenVEX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     CycloneDX_repos.sort_values(by=["CycloneDX"], ascending=False, inplace=True)
     styler = CycloneDX_repos.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
@@ -62,7 +76,10 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     )
 
     OpenVEX_repos = repos.dropna(subset=["OpenVEX"])
-    OpenVEX_repos.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
+    OpenVEX_repos.drop(
+        columns=["SPDX", "CycloneDX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     OpenVEX_repos.sort_values(by=["OpenVEX"], ascending=False, inplace=True)
     styler = OpenVEX_repos.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
@@ -79,7 +96,10 @@ def repository_tables(buckets: dict, folder: Path) -> None:
     )
 
     SPDX_repos = repos.dropna(subset=["SPDX"])
-    SPDX_repos.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
+    SPDX_repos.drop(
+        columns=["CycloneDX", "OpenVEX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     SPDX_repos.sort_values(by=["SPDX"], ascending=False, inplace=True)
     styler = SPDX_repos.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"

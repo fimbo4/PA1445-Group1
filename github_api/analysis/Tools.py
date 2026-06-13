@@ -7,7 +7,7 @@ from .extentions import Extentions
 
 
 def tools_analysis(
-    vex, extention: Extentions, specification: str, buckets: dict
+    vex, extention: Extentions, specification: str, buckets: dict, redhat: bool
 ) -> dict:
     """
     Extracts the name of the tools used to generate the vex
@@ -17,6 +17,7 @@ def tools_analysis(
     extention - the extention of the vex file, this is so we can handle both json and xml
     specification - the specification of the current Vex file
     buckets - the datastructure we add another tool to
+    redhat - check for if the vex is from "aquasecurity/vuln-list-redhat", assumes only CSAF files are from there
 
     Returns
     buckets
@@ -29,6 +30,10 @@ def tools_analysis(
 
         elif specification == "CSAF" and "document" in vex.keys():
             # CSAF dosen't have a "tools" field, but a tool could be a publisher.
+            if redhat:
+                buckets["CSAF-Redhat"][vex["document"]["publisher"]["name"]] += 1
+            else:
+                buckets["CSAF-Non-Redhat"][vex["document"]["publisher"]["name"]] += 1
             buckets[specification][vex["document"]["publisher"]["name"]] += 1
             found_tool = True
 
@@ -82,6 +87,8 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     # Percentage of tools
     tools_vs_non_tools = {}
     for specification in buckets:
+        if "Redhat" in specification:
+            continue
         tools_vs_non_tools[specification] = {
             "count": buckets[specification]["count"],
             "percentage": buckets[specification]["count"] / file_count[specification],
@@ -102,7 +109,10 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
 
     tools = pd.DataFrame(buckets)
     CycloneDX_tools = tools.dropna(subset=["CycloneDX"])
-    CycloneDX_tools.drop(columns=["SPDX", "OpenVEX", "CSAF"], inplace=True)
+    CycloneDX_tools.drop(
+        columns=["SPDX", "OpenVEX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     CycloneDX_tools.drop(labels=["count"], axis="index", inplace=True)
     CycloneDX_tools.sort_values(by=["CycloneDX"], ascending=False, inplace=True)
     styler = CycloneDX_tools.style.format(
@@ -122,6 +132,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     CSAF_tools = tools.dropna(subset=["CSAF"])
     CSAF_tools.drop(columns=["SPDX", "OpenVEX", "CycloneDX"], inplace=True)
     CSAF_tools.drop(labels=["count"], axis="index", inplace=True)
+    CSAF_tools.fillna(value=0, inplace=True)
     CSAF_tools.sort_values(by=["CSAF"], ascending=False, inplace=True)
     styler = CSAF_tools.style.format(
         precision=0, decimal=",", thousands=" ", escape="latex"
@@ -130,7 +141,7 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     content.append(
         styler.to_latex(
             environment="longtable",
-            column_format="p{10cm}r",
+            column_format="lrrr",
             label="tab:CSAF tools",
             caption="Table naming all the tools used in CSAF files",
             hrules=True,
@@ -138,7 +149,10 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     )
 
     OpenVEX_tools = tools.dropna(subset=["OpenVEX"])
-    OpenVEX_tools.drop(columns=["SPDX", "CycloneDX", "CSAF"], inplace=True)
+    OpenVEX_tools.drop(
+        columns=["SPDX", "CycloneDX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     OpenVEX_tools.drop(labels=["count"], axis="index", inplace=True)
     OpenVEX_tools.sort_values(by=["OpenVEX"], ascending=False, inplace=True)
     styler = OpenVEX_tools.style.format(
@@ -156,7 +170,10 @@ def tools_tables(buckets: dict, file_count: dict, folder: Path) -> None:
     )
 
     SPDX_tools = tools.dropna(subset=["SPDX"])
-    SPDX_tools.drop(columns=["CycloneDX", "OpenVEX", "CSAF"], inplace=True)
+    SPDX_tools.drop(
+        columns=["CycloneDX", "OpenVEX", "CSAF", "CSAF-Redhat", "CSAF-Non-Redhat"],
+        inplace=True,
+    )
     SPDX_tools.drop(labels=["count"], axis="index", inplace=True)
     SPDX_tools.sort_values(by=["SPDX"], ascending=False, inplace=True)
     styler = SPDX_tools.style.format(
